@@ -2,19 +2,25 @@ package uk.ac.ed.inf.heatmap;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileNotFoundException;
+import java.util.List;
+
 import org.junit.Test;
 
-/**
- * Unit test for simple App.
- */
 public class AppTest 
 {
-    /**
-     * Rigorous Test :-)
-     */
+
     @Test
-    public void shouldAnswerWithTrue()
-    {
+    public void shouldAnswerWithTrue() {
         assertTrue( true );
     }
+    
+    @Test
+    public void runApp() {
+    	
+    	String[] args = new String[] {"predictions.txt"};
+    	App.main(args);
+    	
+    }
+    
 }
