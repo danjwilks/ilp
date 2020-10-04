@@ -15,30 +15,41 @@ public class App {
 	
     public static void main( String[] args ) {
     	
-    	if (!isValidInput(args)) {
-    		throw new IllegalArgumentException();
-    	}
+		try {
+			validateInput(args);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return;
+		}
+    	
+    	String filePath = args[0];
         
     	List<List<Integer>> predictions;
 		try {
-			predictions = parsePredictions(args);
+			predictions = parsePredictions(filePath);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return;
 		}
 		
-		HeatMap heatMap = new HeatMap.HeatMapBuilder(predictions)
+		String geoJson = new GeoJsonBuilder(predictions)
 				.ullon(ULLON)
 				.ullat(ULLAT)
 				.lrlon(LRLON)
 				.lrlat(LRLAT)
 				.build();
 		
-		writeToFile("heatmap.geojson", heatMap.getGeoJSON());
+		writeToFile("heatmap.geojson", geoJson);
         
     }
     
-    public static void writeToFile(String filePath, String geoJSON) {
+    private static void validateInput(String[] args) throws IllegalAccessException {
+    	if (args.length != 1) {
+    		throw new IllegalArgumentException("input file parameter is required");
+    	}
+    }
+    
+    public static void writeToFile(String filePath, String data) {
     	
     	File file = new File(filePath);
 
@@ -49,25 +60,18 @@ public class App {
 			e.printStackTrace();
 			return;
 		}
-		writer.println(geoJSON);
+		writer.println(data);
 		writer.close();
 		
 	}
     
-    public static List<List<Integer>> parsePredictions(String[] args) throws FileNotFoundException {
+    public static List<List<Integer>> parsePredictions(String filePath) throws FileNotFoundException {
     	
-    	String filePath = args[0];
     	PredictionsParser predictionsParser = new PredictionsParser(new TextFileParser());
     	List<List<Integer>> predictions = predictionsParser.parseFile(filePath);
+
 		return predictions;
     	
-    }
-    
-    private static boolean isValidInput(String[] args) {
-    	if (args.length != 1) {
-    		return false;
-    	}
-    	return true;
     }
     
 }

@@ -37,14 +37,14 @@ public class TextFileParser implements FileParser{
 	
 	private static List<List<Integer>> parsePredictions(List<String> fileLines) {
     	
-    	ArrayList<List<Integer>> rows = new ArrayList<>();
+    	ArrayList<List<Integer>> predictions = new ArrayList<>();
     	
     	for (String line: fileLines) {
-    		List<Integer> row = parseIntegers(line);
-    		rows.add(row);
+    		List<Integer> rowOfPredictions = parseIntegers(line);
+    		predictions.add(rowOfPredictions);
     	}
     	
-    	return rows;
+    	return predictions;
     	
     }
 	
@@ -61,7 +61,6 @@ public class TextFileParser implements FileParser{
     		} catch (NumberFormatException e){
     			e.printStackTrace();
     		}
-//    		integers.add(matcher.group());
     	}
     	
     	return integers;
