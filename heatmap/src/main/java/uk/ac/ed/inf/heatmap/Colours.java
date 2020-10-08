@@ -1,5 +1,10 @@
 package uk.ac.ed.inf.heatmap;
 
+/**
+ * The hex values of colours that are used in the 
+ * heatmap. 
+ */
+
 public final class Colours {
 	
 	private Colours() {
