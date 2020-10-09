@@ -65,6 +65,7 @@ public class TextFileParser implements FileParser{
     	
     	var predictions = new ArrayList<List<Integer>>();
     	
+    	// Parses the Integers from each fileLine
     	for (var line: fileLines) {
     		var rowOfPredictions = parseIntegers(line);
     		predictions.add(rowOfPredictions);
@@ -84,8 +85,10 @@ public class TextFileParser implements FileParser{
     	
     	var integers = new ArrayList<Integer>();
     	
+    	// Regex to match all integers within the fileLine
     	var pattern = Pattern.compile("\\d+");
     	var matcher = pattern.matcher(fileLine); 
+    	// Iterates through all the matches found
     	while (matcher.find()) {
     		try {
     			int i = Integer.parseInt(matcher.group());

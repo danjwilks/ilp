@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import static uk.ac.ed.inf.heatmap.FileTypes.*;
 
 /**
  * Parses predictions.txt, creates and writes geojson to file.
@@ -30,6 +31,7 @@ public class App {
 	private static final double LRLAT = 55.942617;
 	
 	private static final String OUTPUT_FILEPATH = "heatmap.geojson";
+	private static final String FILE_TYPE = TEXT;
 	
 	/**
 	 * Parses predictions.txt, creates and writes geojson to file.
@@ -40,6 +42,7 @@ public class App {
 	
     public static void main( String[] args ) {
     	
+    	// attempts to validate the args input
 		try {
 			validateInput(args);
 		} catch (IllegalArgumentException e) { // incorrect number of arguments
@@ -49,6 +52,8 @@ public class App {
     	
     	var filePath = args[0];
         
+    	// attempts to parse the predictions from the
+    	// file specified by the input argument
     	List<List<Integer>> predictions;
 		try {
 			predictions = parsePredictions(filePath);
@@ -90,6 +95,8 @@ public class App {
     	
     	var file = new File(filePath);
 
+    	// creates PrintWriter object to write the data to the 
+    	// filePath.
 		PrintWriter writer;
 		try {
 			writer = new PrintWriter(file, "UTF-8");
@@ -105,12 +112,24 @@ public class App {
     /**
 	 * Parses predictions from a file.
 	 * 
-	 * Assumes file is a text file.
+	 * Currently only supports text files. Can be extended
+	 * to include options for csv etc.
 	 */
     
-    public static List<List<Integer>> parsePredictions(String filePath) throws FileNotFoundException {
+    @SuppressWarnings("unused")
+	public static List<List<Integer>> parsePredictions(String filePath) throws FileNotFoundException{
     	
-    	var predictionsParser = new PredictionsParser(new TextFileParser());
+    	FileParser predictionsParser;
+    	
+    	if (FILE_TYPE == TEXT) { // filetype is specified to TEXT 
+    		predictionsParser = new TextFileParser();
+    	} else {
+    		/*
+    		 *  Extendible to be able to use for other file types 
+    		 *  e.g. predictionsParser = new CsvFileParser();
+    		 */
+    	}
+    	
     	var predictions = predictionsParser.parseFile(filePath);
 
 		return predictions;

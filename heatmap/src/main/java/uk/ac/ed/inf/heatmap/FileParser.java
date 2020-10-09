@@ -10,6 +10,9 @@ import java.util.List;
  * for different file types.
  * 
  * This follows the strategy creational design pattern.
+ * 
+ * Allows code to be more extendable and managable for 
+ * future researcher use.
  */
 
 public interface FileParser {

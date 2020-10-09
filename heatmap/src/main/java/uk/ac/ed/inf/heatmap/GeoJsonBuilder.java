@@ -127,6 +127,11 @@ public class GeoJsonBuilder {
 		
 		double latLen = polyLatLength();
 		
+		/* 
+		 * iterates through the number of latitude points
+		 * and sets latitudes[i] to the latitude value
+		 * at that latitude point.
+		*/
 		for (int i = 0; i < noLatitudes; i++) {
 			latitudes[i] = ullat + (i * latLen);
 		}
@@ -165,6 +170,11 @@ public class GeoJsonBuilder {
 		
 		double lonLen = polyLonLength();
 		
+		/* 
+		 * iterates through the number of longitude points
+		 * and sets longitude[i] to the longitude value
+		 * at that longitude point.
+		*/
 		for (int i = 0; i < noLongitudes; i++) {
 			longitudes[i] = ullon - (i * lonLen);
 		}
@@ -202,6 +212,10 @@ public class GeoJsonBuilder {
 	
 	public double polyLonLength() {
 		
+		/* 
+		 * Drone confinement is the square where the drone
+		 * is allowed to travel in.
+		 */
 		double droneConfinementLonLength = ullon - lrlon;
 		return droneConfinementLonLength / noRows();
 	}
@@ -213,6 +227,10 @@ public class GeoJsonBuilder {
 	
 	public double polyLatLength() {
 		
+		/* 
+		 * Drone confinement is the square where the drone
+		 * is allowed to travel in.
+		 */
 		double droneConfinementLatLength = lrlat - ullat;
 		return droneConfinementLatLength / noColumns();
 	}
@@ -242,13 +260,39 @@ public class GeoJsonBuilder {
 		
 		var features = new ArrayList<Feature>();
 		
-		int noRows = noRows();
-		int noColumns = noColumns();
-		// we specify each square in the heatmap by the upper left point
-		for (int ullonIndex = 0; ullonIndex < noRows; ullonIndex++) {
-			for (int ullatIndex = 0; ullatIndex < noColumns; ullatIndex++) {
+		/* 
+		 * We specify each square in the heatmap by the upper left point.
+		 * 
+		 * E.g. we have a Heatmap and lons / lats as below, 
+		 *  
+		 * 		* -- * -- *
+		 * 		|  1 |	2 |  	lons = [1.01, 2.01, 3.01]
+		 * 		* -- * -- *
+		 * 		|  3 |	4 |		lats = [1.01, 2.01, 3.01]
+		 *  	* -- * -- * 
+		 *  
+		 *  then to specify square 1, we would need the 
+		 *  upper left longitude and upper left latitude of square 1.
+		 *  
+		 *  Since we have lons and lats which hold these values already,
+		 *  we can specify the square 1 by the INDEX of the upper left
+		 *  longitude and upper left latitude which would allow us to 
+		 *  access lons and lats values for the square.
+		 *  
+		 *  So, we just need to pass the upper left latitude and upper left
+		 *  longitude index to buildFeature function to specify which square
+		 *  we want to build.
+		 *  
+		 *  For the iteration:
+		 *  We use lons.length - 1 since we are specifying only the 
+		 *  upper left points of a square, so we do not need the final
+		 *  right point of the square.
+		 */
+		
+		for (int lonsIndex = 0; lonsIndex < lons.length - 1; lonsIndex++) {
+			for (int latsIndex = 0; latsIndex < lats.length - 1; latsIndex++) {
 				
-				var feature = buildFeature(ullonIndex, ullatIndex);
+				var feature = buildFeature(lonsIndex, latsIndex);
 				features.add(feature);
 				
 			}
@@ -270,11 +314,11 @@ public class GeoJsonBuilder {
 	 *  index of the lons attribute we should use.
 	 */
 	
-	public Feature buildFeature(int ullonIndex, int ullatIndex) {
+	public Feature buildFeature(int lonsIndex, int latsIndex) {
 		
-		var polygon = buildPolygon(ullonIndex, ullatIndex);
+		var polygon = buildPolygon(lonsIndex, latsIndex);
 		var feature = Feature.fromGeometry(polygon);		
-		addProperties(feature, ullonIndex, ullatIndex);
+		addProperties(feature, lonsIndex, latsIndex);
 		
 		return feature;
 	}
@@ -284,11 +328,21 @@ public class GeoJsonBuilder {
 	 *  
 	 *  The required properties are the opacity,
 	 *  fill and rgb string. 
+	 *  
+	 *  The feature has location attributes dependent on 
+	 *  the upper left longitudinal Index specifying which
+	 *  index of the lons attribute we should use and also
+	 *  the upper left longitudinal Index specifying which
+	 *  index of the lons attribute we should use.
+	 *  
+	 *  We can use these indexes to access the correct
+	 *  prediction, since each lons and lats pair map to a 
+	 *  specific prediction.
 	 */
 	
-	public void addProperties(Feature feature, int ullonIndex, int ullatIndex) {
+	public void addProperties(Feature feature, int lonsIndex, int latsIndex) {
 		
-		var prediction = predictions.get(ullatIndex).get(ullonIndex);
+		var prediction = predictions.get(latsIndex).get(lonsIndex);
 		var fill = getFeatureFill(prediction);
 		var rgbString = getFeatureRgbString(prediction);
 		
@@ -305,50 +359,62 @@ public class GeoJsonBuilder {
 	
 	public String getFeatureFill(int prediction) {
 		
-		String fill = "";
-		
-		if (0 <= prediction && prediction < 32) {
-			fill = GREEN;
-		} else if (32 <= prediction && prediction < 64) {
-			fill = MEDIUM_GREEN;
-		} else if (64 <= prediction && prediction < 96) {
-			fill = LIGHT_GREEN;
-		} else if (96 <= prediction && prediction < 128) {
-			fill = LIME_GREEN;
-		} else if (128 <= prediction && prediction < 160) {
-			fill = GOLD;
-		} else if (160 <= prediction && prediction < 192) {
-			fill = ORANGE;
-		} else if (192 <= prediction && prediction < 224) {
-			fill = RED_ORANGE;
-		} else if (224 <= prediction && prediction < 256) {
-			fill = RED;
-		}
+		String fill = getPredictionHexString(prediction);
 		return fill;
 	}
 	
 	/** 
-	 *  Since rgb string and fill are the same string,
-	 *  we can reuse the getFeatureFill method. 
+	 *  Determines the hex string colour for the inputed
+	 *  prediction value. 
+	 */
+	
+	public String getPredictionHexString(int prediction) {
+		
+		String hexString = "";
+		
+		if (0 <= prediction && prediction < 32) {
+			hexString = GREEN;
+		} else if (32 <= prediction && prediction < 64) {
+			hexString = MEDIUM_GREEN;
+		} else if (64 <= prediction && prediction < 96) {
+			hexString = LIGHT_GREEN;
+		} else if (96 <= prediction && prediction < 128) {
+			hexString = LIME_GREEN;
+		} else if (128 <= prediction && prediction < 160) {
+			hexString = GOLD;
+		} else if (160 <= prediction && prediction < 192) {
+			hexString = ORANGE;
+		} else if (192 <= prediction && prediction < 224) {
+			hexString = RED_ORANGE;
+		} else if (224 <= prediction && prediction < 256) {
+			hexString = RED;
+		}
+		return hexString;
+	}
+	
+	/** 
+	 *  Determines the fill colour for the inputed
+	 *  prediction value. 
 	 */
 	
 	public String getFeatureRgbString(int prediction) {
 		
-		return getFeatureFill(prediction);
+		String rgbString = getPredictionHexString(prediction);
+		return rgbString;
 	}
 	
 	/** 
 	 *  Builds a Polygon.
 	 *  
-	 *  The Poygon is built from a list of points using
+	 *  The Polygon is built from a list of points using
 	 *  the upper left longitudinal Index for lons 
 	 *  and the upper left latitudinal Index for lats.
 	 *  
 	 */
 	
-	public Polygon buildPolygon(int ullonIndex, int ullatIndex) {
+	public Polygon buildPolygon(int lonsIndex, int latsIndex) {
 		
-		var points = buildPoints(ullonIndex, ullatIndex);
+		var points = buildPoints(lonsIndex, latsIndex);
 		var polygon = Polygon.fromLngLats(Arrays.asList(points));
 		
 		return polygon;
@@ -367,7 +433,7 @@ public class GeoJsonBuilder {
 	 *  using simple logic.
 	 */
 	
-	public List<Point> buildPoints(int ullonIndex, int ullatIndex) {
+	public List<Point> buildPoints(int lonsIndex, int latsIndex) {
 		
 		/*
 		 * We first want the upper left point,
@@ -389,10 +455,11 @@ public class GeoJsonBuilder {
 		
 		var points = new ArrayList<Point>();
 		
+		// iterating through each of the points of the Polygon
 		for (int i = 0; i < 4; i++) {
 			
-			int lonIndex = ullonIndex + lonIndexDiff[i];
-			int latIndex = ullatIndex + latIndexDiff[i];
+			int lonIndex = lonsIndex + lonIndexDiff[i];
+			int latIndex = latsIndex + latIndexDiff[i];
 			
 			var point = buildPoint(lonIndex, latIndex);
 			points.add(point);
@@ -403,6 +470,9 @@ public class GeoJsonBuilder {
 	
 	/** 
 	 *  Builds a Point.
+	 *  
+	 *  Using the longitudinal and latitudinal values
+	 *  from lons and lats, we can build the point.
 	 */
 	
 	public Point buildPoint(int lonIndex, int latIndex) {
