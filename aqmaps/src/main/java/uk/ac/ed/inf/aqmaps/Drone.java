@@ -12,14 +12,13 @@ import com.mapbox.geojson.FeatureCollection;
 public class Drone {
 	
 	public static void addSensorReading(List<Feature> features, Sensor nearbySensor) {
-		
-		Feature sensorReading = Feature.fromGeometry(nearbySensor.point);
+		               
+		Feature sensorReading = Feature.fromGeometry(nearbySensor.getPoint());
 		sensorReading.addStringProperty("marker-symbol", "lighthouse");
 		sensorReading.addStringProperty("location", "slips.mass.baking");
 		sensorReading.addStringProperty("marker-color", "#00ff00");
 		sensorReading.addStringProperty("color", "#00ff00");
 		features.add(sensorReading);
-		
 	}
 	
 	public static void traverse(GraphPath<Sensor, SensorPath> bestRoute) {
@@ -33,10 +32,15 @@ public class Drone {
 		var features = new ArrayList<Feature>();
 		
 		for (var sensorPath : edges) {
-			addSensorReading(features, sensorPath.source);
-			
+			boolean isSource = true;
 			for (var dronePath : sensorPath.paths) {
 				features.add(Feature.fromGeometry(dronePath.lineString));
+				if (dronePath.location1.isNearSensor) {
+					Sensor nearbySensor = dronePath.location1.nearbySensor;
+//					features.add(Feature.fromGeometry(nearbySensor.getPoint()));
+					addSensorReading(features, nearbySensor);
+					isSource = false;
+				}
 			}
 			i++;
 		}
