@@ -189,9 +189,8 @@ public class App {
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();
     			
-//    	
-//    	var drone = new Drone();
-//    	drone.traverse(bestRoute);
+    	var drone = new Drone();
+    	drone.traverse(bestRoute);
 //    	
 //    	var lon = -3.192214965820312;
 //    	var lat = 55.944009105332775;
