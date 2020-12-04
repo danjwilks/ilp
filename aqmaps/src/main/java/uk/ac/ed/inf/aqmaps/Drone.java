@@ -19,22 +19,14 @@ import com.mapbox.geojson.Point;
 
 public class Drone {
 	
-//	public void addSensorReading(List<Feature> features, Sensor nearbySensor) {
-//		               
-//		Feature sensorReading = Feature.fromGeometry(nearbySensor.getPoint());
-//		sensorReading.addStringProperty("marker-symbol", "lighthouse");
-//		sensorReading.addStringProperty("location", "slips.mass.baking");
-//		sensorReading.addStringProperty("marker-color", "#00ff00");
-//		sensorReading.addStringProperty("color", "#00ff00");
-//		features.add(sensorReading);
-//	}
-	
 	List<Feature> features;
 	Set<Sensor> visitedSensors;
+	DroneLocation startEndLocation;
 	
-	public Drone() {
+	public Drone(DroneLocation startEndLocation) {
 		this.features = new ArrayList<Feature>();
 		this.visitedSensors = new HashSet<>();
+		this.startEndLocation = startEndLocation;
 	}
 	
 	public String determineWhat3Words(Sensor sensor) {
@@ -42,7 +34,6 @@ public class Drone {
 	}
 	
 	public String determineFeatureRgbString(Sensor sensor) {
-		
 		return getHexString(sensor);
 	}
 	
@@ -56,8 +47,14 @@ public class Drone {
 		if (sensor.battery < tenPercent) {
 			return CROSS;
 		}
-//		sensor.reading = null;
-		double polutionLevel = Double.parseDouble(sensor.reading);
+		double polutionLevel;
+		try {
+			polutionLevel = Double.parseDouble(sensor.reading);
+		} catch (NumberFormatException e) {
+			return CROSS;
+		} catch (NullPointerException e) {
+			return CROSS;
+		}
 		
 		if (0 <= polutionLevel && polutionLevel < 128) {
 			markerSymbol = LIGHTHOUSE;
@@ -107,7 +104,9 @@ public class Drone {
 		feature.addStringProperty("location", location);
 		feature.addStringProperty("rgb-string", rgbString);
 		feature.addStringProperty("marker-color", markerColor);
-		feature.addStringProperty("marker-symbol", markerSymbol);
+		if (!markerSymbol.equals("")) {
+			feature.addStringProperty("marker-symbol", markerSymbol);
+		}
 		
 	}
 	
@@ -133,35 +132,77 @@ public class Drone {
 		}
 	}
 	
-//	public int findStart(List<DroneLocation> droneLocations) {
-//		for (int i = 0; i < droneLocations.size(); i++) {
-//			if (isStartEndLocation(droneLocations.get(i))) {
-//				return i;
-//			}
-//		}
-//	}
+	public boolean isStartEndLocation(DroneLocation droneLocation) {
+		
+		double lonDiff = Math.abs(droneLocation.lon - startEndLocation.lon);
+		double latDiff = Math.abs(droneLocation.lat - startEndLocation.lat);
+		
+		if (lonDiff < 0.0001 && latDiff < 0.0001) {
+			return true;
+		}
+		return false;
+		
+	}
+	
+	public int findStart(List<DroneLocation> droneLocations) {
+		for (int i = 0; i < droneLocations.size(); i++) {
+			if (isStartEndLocation(droneLocations.get(i))) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public List<SensorPath> reorderEdges (List<SensorPath> originalEdges, int newStart) {
+		
+		var reorderedEdges = new ArrayList<SensorPath>();
+		
+		for (int i = newStart; i < originalEdges.size(); i++) {
+			reorderedEdges.add(originalEdges.get(i));
+		}
+		
+		for (int i = 0; i < newStart; i++) {
+			reorderedEdges.add(originalEdges.get(i));
+		}
+		
+		return reorderedEdges;
+		
+	}
+	
+	public List<DroneLocation> reorderVerticies (List<DroneLocation> originalVerticies, int newStart) {
+		var reorderedEdges = new ArrayList<DroneLocation>();
+		
+		for (int i = newStart; i < originalVerticies.size() - 1; i++) {
+			reorderedEdges.add(originalVerticies.get(i));
+		}
+		
+		for (int i = 0; i < newStart; i++) {
+			reorderedEdges.add(originalVerticies.get(i));
+		}
+		
+		return reorderedEdges;
+	}
 	
 	public void traverse(GraphPath<DroneLocation, SensorPath> simpleSensorGraph) {
 		
 		var edges = simpleSensorGraph.getEdgeList();
 		var verticies = simpleSensorGraph.getVertexList();
 		
-//		int startIndex = findStart(edges);
-//		var edgesFromStart = reorderEdges(edges, startIndex);
-//		var verticiesFromStart = reorderVerticies(verticies, startIndex);
-
+		int startIndex = findStart(verticies);
+		var edgesFromStart = reorderEdges(edges, startIndex);
+		var verticiesFromStart = reorderVerticies(verticies, startIndex);
+		
 		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < verticies.size() - 1; droneLocationToVisitIndex++) {
-			var droneLocationToVisit = verticies.get(droneLocationToVisitIndex);
+			var droneLocationToVisit = verticiesFromStart.get(droneLocationToVisitIndex);
 			if (droneLocationToVisit.isStart) {
 				var point = Point.fromLngLat(droneLocationToVisit.lon, droneLocationToVisit.lat); 
 				var feature = Feature.fromGeometry(point);
 				features.add(feature);
 			} else { // is near a sensor
-				gatherSensorReading(verticies.get(droneLocationToVisitIndex));
+				gatherSensorReading(verticiesFromStart.get(droneLocationToVisitIndex));
 			}
-			moveToNextDroneLocation(edges.get(droneLocationToVisitIndex));
+			moveToNextDroneLocation(edgesFromStart.get(droneLocationToVisitIndex));
 		}
-		
 		
     	FeatureCollection fc = FeatureCollection.fromFeatures(features);
     	System.out.println(fc.toJson());

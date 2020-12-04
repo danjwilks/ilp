@@ -180,7 +180,7 @@ public class App {
 
     	var buildings = getBuildings();
     	var sensors = getSensors(day, month, year);
-    	double[] startLocation = {startLongitude, startLatitude};
+    	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
     	var bestRoute = new RouteBuilder()
     			.setFlyZone(FLYZONE)
@@ -189,7 +189,7 @@ public class App {
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();
     	
-    	var drone = new Drone();
+    	var drone = new Drone(startLocation);
     	drone.traverse(bestRoute);
 //    	
 //    	var lon = -3.192214965820312;

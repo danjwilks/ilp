@@ -39,10 +39,8 @@ public class RouteBuilder {
 		this.sensors = sensors;
 		return this;
 	}
-	public RouteBuilder setStartEndLocation(double[] startEndLocation) {
-		double lon = startEndLocation[0];
-		double lat = startEndLocation[1];
-		this.startEndLocation = new DroneLocation(lon, lat);
+	public RouteBuilder setStartEndLocation(DroneLocation startEndLocation) {
+		this.startEndLocation = startEndLocation;
 		return this;
 	}
 	
@@ -178,10 +176,6 @@ public class RouteBuilder {
 			
 		}
 		
-//		for (var edge : allPaths) {
-//			System.out.println(edge);
-//		}
-		
 		return allPaths;
 		
 	}
@@ -225,7 +219,7 @@ public class RouteBuilder {
 		double lonDiff = Math.abs(droneLocation.lon - startEndLocation.lon);
 		double latDiff = Math.abs(droneLocation.lat - startEndLocation.lat);
 		
-		if (lonDiff < 0.00001 && latDiff < 0.0001) {
+		if (lonDiff < 0.0001 && latDiff < 0.0001) {
 			return true;
 		}
 		return false;
