@@ -188,7 +188,7 @@ public class App {
     			.setSensors(sensors)
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();
-    			
+    	
     	var drone = new Drone();
     	drone.traverse(bestRoute);
 //    	

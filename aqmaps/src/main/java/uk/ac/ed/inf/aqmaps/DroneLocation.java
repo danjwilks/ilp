@@ -12,6 +12,7 @@ public class DroneLocation {
 	public String id;
 	public boolean isNearSensor;
 	public HashSet<Sensor> nearbySensors;
+	public boolean isStart = false;
 	
 	public DroneLocation(double lon, double lat) {
 		this.lon = lon;

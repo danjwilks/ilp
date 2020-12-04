@@ -24,11 +24,7 @@ public class RouteBuilder {
 	private double[] flyzone;
 	private FeatureCollection buildings;
 	private List<Sensor> sensors;
-	private double[] startEndLocation;
-	
-	private DroneLocation source;
-	private DroneLocation sink;
-	
+	private DroneLocation startEndLocation;
 	
 	public RouteBuilder setFlyZone(double[] flyzone) {
 		this.flyzone = flyzone;
@@ -44,7 +40,9 @@ public class RouteBuilder {
 		return this;
 	}
 	public RouteBuilder setStartEndLocation(double[] startEndLocation) {
-		this.startEndLocation = startEndLocation;
+		double lon = startEndLocation[0];
+		double lat = startEndLocation[1];
+		this.startEndLocation = new DroneLocation(lon, lat);
 		return this;
 	}
 	
@@ -66,11 +64,13 @@ public class RouteBuilder {
 		
 		ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 		
-		double upperLeftLonStart = startEndLocation[0];
+		double upperLeftLonStart = startEndLocation.lon;
+		int numberOfRowsToLeft = 0;
 		while (upperLeftLonStart > flyzone[0]) {
+			numberOfRowsToLeft++;
 			upperLeftLonStart -= 0.0003;
 		}
-		double upperLeftLatStart = startEndLocation[1];
+		double upperLeftLatStart = startEndLocation.lat;
 		while (upperLeftLatStart < flyzone[1]) {
 			upperLeftLatStart += 0.0003;
 		}
@@ -79,6 +79,10 @@ public class RouteBuilder {
 		double lowerRightLatEnd = flyzone[3];
 		
 		boolean isShiftedRow = false;
+		
+		if (numberOfRowsToLeft % 2 == 1) {
+			isShiftedRow = true;
+		}
 		
 		double latDecrement = Math.sqrt(Math.pow(0.0003, 2) - Math.pow(0.00015, 2)); // figure out what is the triangle height
 		double lonIncrement = 0.0003;
@@ -188,15 +192,9 @@ public class RouteBuilder {
 		
 		List<List<DroneLocation>> allPossibleDroneLocations = buildAllPossibleLocations();
 		HashSet<DronePath> allPossibleDronePaths = buildAllPossiblePaths(allPossibleDroneLocations);
-		boolean isFirst = true;
 		for (var rowOfDroneLocations : allPossibleDroneLocations) {
 			for (var droneLocation : rowOfDroneLocations) {
 				graph.addVertex(droneLocation);
-				if (isFirst) {
-					source = droneLocation;
-					isFirst = false;
-				}
-				sink = droneLocation;
 			}
 		}
 		
@@ -209,7 +207,7 @@ public class RouteBuilder {
 		
 	}
 	
-	public boolean isWithinDistance(Sensor sensor, DroneLocation droneLocation) {
+	public boolean sensorIsWithinDistance(Sensor sensor, DroneLocation droneLocation) {
 		
 		double distance = Math.sqrt(
 				Math.pow(sensor.getLongitude() - droneLocation.lon, 2)
@@ -222,36 +220,51 @@ public class RouteBuilder {
 		
 	}
 	
-	public Set<DroneLocation> findDroneLocationsNearSensors(Graph<DroneLocation, DronePath> triangleGraph) {
+	public boolean isStartEndLocation(DroneLocation droneLocation) {
 		
-		var droneLocationsNearSensors = new HashSet<DroneLocation>();
+		double lonDiff = Math.abs(droneLocation.lon - startEndLocation.lon);
+		double latDiff = Math.abs(droneLocation.lat - startEndLocation.lat);
+		
+		if (lonDiff < 0.00001 && latDiff < 0.0001) {
+			return true;
+		}
+		return false;
+		
+	}
+	
+	public Set<DroneLocation> findDroneLocationsToVisit(Graph<DroneLocation, DronePath> triangleGraph) {
+		
+		var droneLocationsToVisit = new HashSet<DroneLocation>();
 		
 		for (var sensor : sensors) {
 			for (var droneLocation : triangleGraph.vertexSet()) {
-				if (isWithinDistance(sensor, droneLocation)) {
-					droneLocationsNearSensors.add(droneLocation);
+				if (sensorIsWithinDistance(sensor, droneLocation)) {
+					droneLocationsToVisit.add(droneLocation);
 					droneLocation.isNearSensor = true;
 					droneLocation.nearbySensors.add(sensor);
 					break;
+				} else if (isStartEndLocation(droneLocation)) {
+					droneLocation.isStart = true;
+					droneLocationsToVisit.add(droneLocation);
 				}
 			}
 		}
 //		System.out.println("must visit " + droneLocationsNearSensors.size() + " drones");
-		return droneLocationsNearSensors;
+		return droneLocationsToVisit;
 	}
 	
-	private Graph<DroneLocation, SensorPath> buildShortestPaths(Graph<DroneLocation, DronePath> triangleGraph, Set<DroneLocation> droneLocationsNearSensorsSet) {
+	private Graph<DroneLocation, SensorPath> buildShortestPaths(Graph<DroneLocation, DronePath> triangleGraph, Set<DroneLocation> droneLocationsToVisitSet) {
 		
 		var simpleSensorGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
 		
-		var droneLocationsNearSensorsList = new ArrayList<DroneLocation>();
-		droneLocationsNearSensorsList.addAll(droneLocationsNearSensorsSet);
+		var droneLocationsToVisitList = new ArrayList<DroneLocation>();
+		droneLocationsToVisitList.addAll(droneLocationsToVisitSet);
 		
-		for (int sourceIndex = 0; sourceIndex < droneLocationsNearSensorsList.size(); sourceIndex++) {
-			for (int sinkIndex = sourceIndex + 1; sinkIndex < droneLocationsNearSensorsList.size(); sinkIndex++) {
+		for (int sourceIndex = 0; sourceIndex < droneLocationsToVisitList.size(); sourceIndex++) {
+			for (int sinkIndex = sourceIndex + 1; sinkIndex < droneLocationsToVisitList.size(); sinkIndex++) {
 				
-				var sourceDroneLocation = droneLocationsNearSensorsList.get(sourceIndex);
-				var sinkDroneLocation = droneLocationsNearSensorsList.get(sinkIndex);
+				var sourceDroneLocation = droneLocationsToVisitList.get(sourceIndex);
+				var sinkDroneLocation = droneLocationsToVisitList.get(sinkIndex);
 				
 				var dijk = new BidirectionalDijkstraShortestPath<DroneLocation, DronePath>(triangleGraph);
 				var graphWalk = dijk.getPath(sourceDroneLocation, sinkDroneLocation);
@@ -275,10 +288,11 @@ public class RouteBuilder {
 	public GraphPath<DroneLocation, SensorPath> buildBestRoute() {
 		
 		var triangleGraph = buildTriangleGraph();
-		var droneLocationsNearSensors = findDroneLocationsNearSensors(triangleGraph);
-		var simpleSensorGraph = buildShortestPaths(triangleGraph, droneLocationsNearSensors);
+		var droneLocationsToVisit = findDroneLocationsToVisit(triangleGraph);
+		var simpleSensorGraph = buildShortestPaths(triangleGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
 		var routeFound = christofides.getTour(simpleSensorGraph);
+
 		
 //		var dijk = new BidirectionalDijkstraShortestPath<DroneLocation, DronePath>(triangleGraph);
 //		var graphWalk = dijk.getPath(source, sink);
@@ -289,8 +303,8 @@ public class RouteBuilder {
 //		System.out.println(edges);
 //		System.out.println(graphWalk.getClass());
 		
-		System.out.println("routeFound edges size: " + routeFound.getEdgeList().size());
-		System.out.println("routeFound vertex size: " + routeFound.getVertexList().size());
+//		System.out.println("routeFound edges size: " + routeFound.getEdgeList().size());
+//		System.out.println("routeFound vertex size: " + routeFound.getVertexList().size());
 		
 		return routeFound;
 	}
