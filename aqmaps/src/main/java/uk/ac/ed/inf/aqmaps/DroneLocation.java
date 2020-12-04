@@ -1,8 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.util.HashSet;
 import java.util.UUID;
-
-import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.Point;
 
 public class DroneLocation {
@@ -12,7 +11,7 @@ public class DroneLocation {
 	public Point point;
 	public String id;
 	public boolean isNearSensor;
-	public Sensor nearbySensor;
+	public HashSet<Sensor> nearbySensors;
 	
 	public DroneLocation(double lon, double lat) {
 		this.lon = lon;
@@ -20,9 +19,15 @@ public class DroneLocation {
 		this.point = Point.fromLngLat(lon, lat);
 		this.id = UUID.randomUUID().toString();
 		isNearSensor = false;
-		nearbySensor = null;
+		nearbySensors = new HashSet<>();
 	}
 	
+	@Override
+	public int hashCode() {
+		return point.hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;

@@ -6,14 +6,16 @@ public class SensorPath {
 	
 	List<DroneLocation> locations;
 	List<DronePath> paths;
-	Sensor source;
 	int weight;
+	DroneLocation source;
+	DroneLocation sink;
 	
-	SensorPath(List<DroneLocation> locations, List<DronePath> paths, Sensor source) {
+	SensorPath(List<DroneLocation> locations, List<DronePath> paths, DroneLocation source, DroneLocation sink) {
 		this.locations = locations;
 		this.paths = paths;
-		this.source = source;
 		this.weight = paths.size();
+		this.source = source;
+		this.sink = sink;
 	}
 	
 	@Override
@@ -33,8 +35,8 @@ public class SensorPath {
 			return false;
 		}
 
-		SensorPath edge = (SensorPath) obj;
-		return locations.equals(edge.locations) && paths.equals(edge.paths);
+		SensorPath sensorPath = (SensorPath) obj;
+		return locations.equals(sensorPath.locations) && paths.equals(sensorPath.paths);
 	}
 
 }

@@ -1,18 +1,13 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.math.BigDecimal;
-
-import com.mapbox.geojson.Point;
-
 public class Sensor {
 	
 	String location;
 	double battery;
 	String reading;
-	public Point point;
 	private double longitude;
 	private double latitude;
-	private DroneLocation nearbyDroneLocation;
+	private DroneLocation nearestDroneLocation;
 	
 	public void setLongitude(double lng) {
 		this.longitude = lng;
@@ -26,14 +21,12 @@ public class Sensor {
 	public double getLatitude() {
 		return latitude;
 	}
-	public Point getPoint() {
-		return Point.fromLngLat(longitude, latitude);
-	}
+
 	
 //	  "location": "shut.stands.media",
 //    "battery": 61.31742,
 //    "reading": "89.3"
-	
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;
@@ -53,10 +46,10 @@ public class Sensor {
 	public String toString() {
 		return location;
 	}
-	public void setNearbyDroneLocation(DroneLocation droneLocation) {
-		nearbyDroneLocation = droneLocation;
+	public void setNearestDroneLocation(DroneLocation droneLocation) {
+		nearestDroneLocation = droneLocation;
 	}
-	public DroneLocation getNearbyDroneLocation() {
-		return nearbyDroneLocation;
+	public DroneLocation getNearestDroneLocation() {
+		return nearestDroneLocation;
 	}
 }
