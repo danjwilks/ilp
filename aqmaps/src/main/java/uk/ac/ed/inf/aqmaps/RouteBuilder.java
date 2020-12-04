@@ -44,20 +44,6 @@ public class RouteBuilder {
 		return this;
 	}
 	
-//	public DroneLocation buildFromPointInDirection(DroneLocation currentLocation, int degree) {
-//		
-//		double currentLat = currentLocation.getLatitude();
-//		double currentLng = currentLocation.getLongitude();
-//		
-//		// adjLong = dist * cos(theta) + adjLong
-//		
-//		double adjacentLatitude = 
-//		double adjacentLongitude =
-//		
-//		DroneLocation adjacentDroneLocation = new DroneLocation(adjacentLatitude, adjacentLongitude, ) 
-//		
-//	}
-	
 	public List<List<DroneLocation>> buildTriangleGrid() {
 		
 		ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
@@ -193,7 +179,7 @@ public class RouteBuilder {
 		}
 		
 		for (var dronePath : allPossibleDronePaths) {
-			graph.addEdge(dronePath.source, dronePath.sink, dronePath);
+			graph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
 			graph.setEdgeWeight(dronePath, 1);
 		}
 		
@@ -235,7 +221,7 @@ public class RouteBuilder {
 				if (sensorIsWithinDistance(sensor, droneLocation)) {
 					droneLocationsToVisit.add(droneLocation);
 					droneLocation.isNearSensor = true;
-					droneLocation.nearbySensors.add(sensor);
+					droneLocation.nearbySensor = sensor;
 					break;
 				} else if (isStartEndLocation(droneLocation)) {
 					droneLocation.isStart = true;
@@ -243,7 +229,6 @@ public class RouteBuilder {
 				}
 			}
 		}
-//		System.out.println("must visit " + droneLocationsNearSensors.size() + " drones");
 		return droneLocationsToVisit;
 	}
 	
@@ -268,7 +253,6 @@ public class RouteBuilder {
 				simpleSensorGraph.addVertex(sourceDroneLocation);
 				simpleSensorGraph.addVertex(sinkDroneLocation);
 				
-				// new object adjacentSensor path
 				var sensorPath = new SensorPath(vertices, edges, sourceDroneLocation, sinkDroneLocation);
 				simpleSensorGraph.addEdge(sourceDroneLocation, sinkDroneLocation, sensorPath);
 				simpleSensorGraph.setEdgeWeight(sensorPath, sensorPath.weight);
@@ -286,19 +270,6 @@ public class RouteBuilder {
 		var simpleSensorGraph = buildShortestPaths(triangleGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
 		var routeFound = christofides.getTour(simpleSensorGraph);
-
-		
-//		var dijk = new BidirectionalDijkstraShortestPath<DroneLocation, DronePath>(triangleGraph);
-//		var graphWalk = dijk.getPath(source, sink);
-//		var vertices = graphWalk.getVertexList();
-//		var edges = graphWalk.getEdgeList();
-		
-//		System.out.println(vertices);
-//		System.out.println(edges);
-//		System.out.println(graphWalk.getClass());
-		
-//		System.out.println("routeFound edges size: " + routeFound.getEdgeList().size());
-//		System.out.println("routeFound vertex size: " + routeFound.getVertexList().size());
 		
 		return routeFound;
 	}

@@ -11,7 +11,7 @@ public class DroneLocation {
 	public Point point;
 	public String id;
 	public boolean isNearSensor;
-	public HashSet<Sensor> nearbySensors;
+	public Sensor nearbySensor;
 	public boolean isStart = false;
 	
 	public DroneLocation(double lon, double lat) {
@@ -20,7 +20,7 @@ public class DroneLocation {
 		this.point = Point.fromLngLat(lon, lat);
 		this.id = UUID.randomUUID().toString();
 		isNearSensor = false;
-		nearbySensors = new HashSet<>();
+		nearbySensor = null;
 	}
 	
 	@Override

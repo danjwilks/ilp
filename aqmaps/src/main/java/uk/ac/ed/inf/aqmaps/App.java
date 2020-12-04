@@ -172,6 +172,7 @@ public class App {
     	String day = args[0];
     	String month = args[1];
     	String year = args[2];
+    	String date = day + "-" + month + "-" + year;
     	double startLatitude = Double.parseDouble(args[3]);
     	double startLongitude = Double.parseDouble(args[4]);
     	int randomSeed = Integer.parseInt(args[5]);
@@ -189,7 +190,7 @@ public class App {
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();
     	
-    	var drone = new Drone(startLocation);
+    	var drone = new Drone(startLocation, date);
     	drone.traverse(bestRoute);
 //    	
 //    	var lon = -3.192214965820312;

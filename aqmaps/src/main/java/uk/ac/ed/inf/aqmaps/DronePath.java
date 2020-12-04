@@ -2,22 +2,22 @@ package uk.ac.ed.inf.aqmaps;
 
 public class DronePath {
 	
-	DroneLocation source;
-	DroneLocation sink;
+	DroneLocation vertex1;
+	DroneLocation vertex2;
 	
-	public DronePath(DroneLocation source, DroneLocation sink) {
-		this.source = source;
-		this.sink = sink;
+	public DronePath(DroneLocation vertex1, DroneLocation vertex2) {
+		this.vertex1 = vertex1;
+		this.vertex2 = vertex2;
 	}
 	
 	@Override
 	public String toString() {
-		return "edge between " + this.source.toString() + " and " + this.sink.toString();
+		return "edge between " + this.vertex1.toString() + " and " + this.vertex2.toString();
 	}
 	
 	@Override
 	public int hashCode() {
-		return source.hashCode() + sink.hashCode();
+		return vertex1.hashCode() + vertex2.hashCode();
 	}
 	
 	@Override
@@ -33,8 +33,8 @@ public class DronePath {
 		}
 
 		DronePath edge = (DronePath) obj;
-		return source.equals(edge.source) && sink.equals(edge.sink)
-				|| sink.equals(edge.source) && source.equals(edge.sink);
+		return vertex1.equals(edge.vertex1) && vertex2.equals(edge.vertex2)
+				|| vertex2.equals(edge.vertex1) && vertex1.equals(edge.vertex2);
 	}
 
 }
