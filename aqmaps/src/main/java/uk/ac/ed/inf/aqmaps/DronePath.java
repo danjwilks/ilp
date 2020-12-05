@@ -1,13 +1,19 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.util.Arrays;
+
+import com.mapbox.geojson.LineString;
+
 public class DronePath {
 	
 	DroneLocation vertex1;
 	DroneLocation vertex2;
+	LineString lineString;
 	
 	public DronePath(DroneLocation vertex1, DroneLocation vertex2) {
 		this.vertex1 = vertex1;
 		this.vertex2 = vertex2;
+		this.lineString = LineString.fromLngLats(Arrays.asList(vertex1.point, vertex2.point));
 	}
 	
 	@Override

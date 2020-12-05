@@ -75,13 +75,13 @@ public class Drone {
 		
 	}
 	
-	public void writePathToFile(DroneLocation source, DroneLocation sink, Boolean checkSinkForSensor) {
+	public void writePathToFile(DroneLocation source, DroneLocation sink) {
 		
 		try {
 			var output = new BufferedWriter(new FileWriter(outputFile, true));
 			
 			String nearBySensorLocation = "null";
-			if (checkSinkForSensor && sink.isNearSensor) { 
+			if (sink.isNearSensor) { 
 				nearBySensorLocation = sink.nearbySensor.location;
 			}
 			
@@ -105,59 +105,38 @@ public class Drone {
 		
 	}
 	
-	private void addPathInfoToLogFile(DroneLocation currentDronePathSource, DroneLocation currentDronePathSink,
-			DroneLocation trueSensorPathSink) {
+	private void addPathInfoToLogFile(DroneLocation source, DroneLocation sink) {
 		
-		boolean currentNodeIsSinkNode = currentDronePathSink.equals(trueSensorPathSink);
-		boolean checkForSensor = currentNodeIsSinkNode & currentDronePathSink.isNearSensor;
-		writePathToFile(currentDronePathSource, currentDronePathSink, checkForSensor);
+		writePathToFile(source, sink);
 	}
 	
-	private void recordMovementDetails(DroneLocation currentDronePathSource, DroneLocation currentDronePathSink,
-			DroneLocation trueSensorPathSink) {
+	private void recordMovementDetails(DroneLocation source, DroneLocation sink) {
 		
 //		boolean currentNodeIsSinkNode = currentDronePathSink.equals(trueSensorPathSink);
 //		boolean checkForSensor = currentNodeIsSinkNode & currentDronePathSink.isNearSensor;
 		
 		
-		recordDronePath(currentDronePathSource, currentDronePathSink);
+		recordDronePath(source, sink);
 //		TODO: merge below with above.
 //		we need to add sensor location.
-		addPathInfoToLogFile(currentDronePathSource, currentDronePathSink, trueSensorPathSink);
+		addPathInfoToLogFile(source, sink);
 		
 		
 	}
 
-	public void moveToNextDroneLocation(DroneLocation trueSensorPathSource, DroneLocation trueSensorPathSink, SensorPath sensorPath) {
+	public void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
 		
-		var currentSensorPathSource = sensorPath.source;
-		var edgeToTraverse = sensorPath.paths;
+		recordMovementDetails(source, sink);
 		
-		
-		if (edgeIsInReverseOrder(trueSensorPathSource, currentSensorPathSource)) {
-			edgeToTraverse = reverseSensorPathEdges(edgeToTraverse);
-			currentSensorPathSource = trueSensorPathSource;
-		}
-		
-		var currentDronePathSource = trueSensorPathSource;
-		
-		for (var dronePath: edgeToTraverse) {
-			var currentDronePathSink = currentDronePathSource.equals(dronePath.vertex1) ? dronePath.vertex2 : dronePath.vertex1;
-//			TODO edit below line, try to remove trueSensorPathSink
-			recordMovementDetails(currentDronePathSource, currentDronePathSink, trueSensorPathSink);
-			currentDronePathSource = currentDronePathSink;
-		}
 	}
 
-	public void collectPollutionData(GraphPath<DroneLocation, SensorPath> simpleSensorPath) {
+	public void collectPollutionData(List<DroneLocation> bestRoute) {
 		
-		var edges = simpleSensorPath.getEdgeList();
-		var verticies = simpleSensorPath.getVertexList();
+
 		
-		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < verticies.size() - 1; droneLocationToVisitIndex++) {
-			var currentDroneLocation = verticies.get(droneLocationToVisitIndex);
-			var nextDroneLocation = verticies.get(droneLocationToVisitIndex + 1);
-			var dronePathsToTraverse = edges.get(droneLocationToVisitIndex);
+		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < bestRoute.size() - 1; droneLocationToVisitIndex++) {
+			var currentDroneLocation = bestRoute.get(droneLocationToVisitIndex);
+			var nextDroneLocation = bestRoute.get(droneLocationToVisitIndex + 1);
 			
 			if (currentDroneLocation.isStart) { // delete later
 				var point = Point.fromLngLat(currentDroneLocation.lon, currentDroneLocation.lat); 
@@ -165,11 +144,11 @@ public class Drone {
 				droneRecords.features.add(feature);
 			}
 			
-			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation, dronePathsToTraverse);
-			currentDroneLocation = nextDroneLocation;
+			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
 			if (currentDroneLocation.isNearSensor) {
 				recordSensorDetails(currentDroneLocation.nearbySensor);
 			}
+			
 		}
 		
 		

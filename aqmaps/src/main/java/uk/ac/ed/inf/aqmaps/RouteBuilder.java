@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfJoins;
@@ -81,9 +83,9 @@ public class RouteBuilder {
 			var droneLocationsRow = new ArrayList<DroneLocation>();
 			for (double currLon = upperLeftLonStart; currLon < lowerRightLonEnd; currLon += lonIncrement) {
 				if (isShiftedRow) {
-					droneLocationsRow.add(new DroneLocation(currLon + rowShift, currLat));
+					droneLocationsRow.add(new DroneLocation(round(currLon + rowShift), round(currLat)));
 				} else {
-					droneLocationsRow.add(new DroneLocation(currLon, currLat));
+					droneLocationsRow.add(new DroneLocation(round(currLon), round(currLat)));
 				}
 			}
 			if (isShiftedRow) {
@@ -96,6 +98,11 @@ public class RouteBuilder {
 		
 		return triangleGrid;
 	}
+ 	
+ 	public double round(double num) {
+ 		return (double)Math.round(num * 10000d) / 10000d;
+// 		return num;
+ 	}
 	
 	public HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 		
@@ -406,26 +413,122 @@ public class RouteBuilder {
 		return simpleSensorGraph;
 	}
 
-	public GraphPath<DroneLocation, SensorPath> setStartEndLocation(
-			GraphPath<DroneLocation, SensorPath> randomStartRoute) {
+	public GraphPath<DroneLocation, DronePath> setStartEndLocation(
+			GraphPath<DroneLocation, DronePath> randomStartDronePathRoute) {
 		
-		var edges = randomStartRoute.getEdgeList();
-		var verticies = randomStartRoute.getVertexList();
+		var edges = randomStartDronePathRoute.getEdgeList();
+		System.out.println("all edges in setStart: " + edges);
+		var verticies = randomStartDronePathRoute.getVertexList();
 		
-		var randomStartGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
+		var randomStartGraph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
 		
 		for (var vertex : verticies) {
 			randomStartGraph.addVertex(vertex);
 		}
 		for (var edge : edges) {
-			randomStartGraph.addEdge(edge.source, edge.sink, edge);
+			System.out.println("edge: " + edge);
+			randomStartGraph.addEdge(edge.vertex1, edge.vertex2, edge);
 		}
 		
-		return new GraphWalk<DroneLocation, SensorPath>(randomStartGraph, startEndLocation, startEndLocation,
+		return new GraphWalk<DroneLocation, DronePath>(randomStartGraph, startEndLocation, startEndLocation,
 				verticies, edges, 0.1);
 	}
 	
-	public GraphPath<DroneLocation, SensorPath> buildBestRoute() {
+	public Graph<DroneLocation, DronePath> convertToDronePathsGraph(
+			GraphPath<DroneLocation, SensorPath> sensorRoute) {
+		
+		var edges = sensorRoute.getEdgeList();
+		
+		var droneRouteGraph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
+		
+		System.out.println("sensor route size:  " + sensorRoute.getLength());
+//		System.out.println("sensor route size:  " + sensorRoute.get());
+		
+		for (var sensorEdge : edges) {
+//			System.out.println("sensorePath edge size: " + sensorEdge.locations.size());
+			for (var droneLocation : sensorEdge.locations) {
+				droneRouteGraph.addVertex(droneLocation);
+				if (droneLocation.equals(startEndLocation)) {
+					System.out.println("drone added equals start end");
+				}
+//				System.out.println(droneRouteGraph.containsVertex(droneLocation));
+//				if (startEndLocation.equals(droneLocation)) {
+//					System.out.println("we meet start end location");
+//					System.out.println("contains start: " + droneRouteGraph.containsVertex(startEndLocation));
+//				}
+			}
+		}
+		
+//		System.out.println("vertex set: " + droneRouteGraph.vertexSet());
+		
+		for (var vertex : droneRouteGraph.vertexSet()) {
+			if (startEndLocation.equals(vertex)) {
+				System.out.println("we meet start end location");
+				System.out.println("contains start: " + droneRouteGraph.containsVertex(startEndLocation));
+			}
+		}
+		
+//		System.out.println("contains start: " + droneRouteGraph.containsVertex(startEndLocation));
+		
+		for (var sensorEdge : edges) {
+			for (var dronePath : sensorEdge.paths) {
+				droneRouteGraph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
+				droneRouteGraph.setEdgeWeight(dronePath, 1);
+			}
+		}
+		
+		
+		return droneRouteGraph;
+		
+	}
+	
+	private List<DroneLocation> getGraphWalk(Graph<DroneLocation, DronePath> droneRouteGraph) {
+		
+		var seenLocations = new HashSet<DroneLocation>();
+		var graphWalk = new ArrayList<DroneLocation>();
+		System.out.println("vertex size: " + droneRouteGraph.vertexSet().size());
+		System.out.println("edge size: " + droneRouteGraph.edgeSet().size());
+		
+//		var features = new ArrayList<Feature>();
+//		for (var edge : droneRouteGraph.edgeSet()) {
+//			features.add(Feature.fromGeometry(edge.lineString));
+//			System.out.println(Math.sqrt(
+//					Math.pow(edge.vertex1.lon - edge.vertex2.lon, 2)
+//					+ Math.pow(edge.vertex1.lat - edge.vertex2.lat, 2)
+//					));
+//		}
+//		for (var vertex : droneRouteGraph.vertexSet()) {
+//			features.add(Feature.fromGeometry(vertex.point));
+//		}
+//		System.out.println("fc: " + FeatureCollection.fromFeatures(features).toJson());
+		
+		DroneLocation currentLocation = startEndLocation;
+		while (!seenLocations.contains(currentLocation)) {
+			graphWalk.add(currentLocation);
+			seenLocations.add(currentLocation);
+			
+			var droneLocationEdges = droneRouteGraph.edgesOf(currentLocation);
+			
+			for (var droneLocationEdge : droneLocationEdges) {
+				var droneLocation1 = droneLocationEdge.vertex1;
+				var droneLocation2 = droneLocationEdge.vertex2;
+				
+				if (seenLocations.contains(droneLocation1) && seenLocations.contains(droneLocation2)) {
+					continue;
+				} else if (seenLocations.contains(droneLocation1)) {
+					currentLocation = droneLocation2;
+					break;
+				} else if (seenLocations.contains(droneLocation2)) {
+					currentLocation = droneLocation1;
+					break;
+				}
+			}
+		}
+		return graphWalk;
+		
+	}
+	
+	public List<DroneLocation> buildBestRoute() {
 		
 		buildFlyZone();
 		var triangleGraph = buildTriangleGraph();
@@ -433,10 +536,22 @@ public class RouteBuilder {
 		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
 		var simpleSensorGraph = buildShortestPaths(validDroneLocationsGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
-		var randomStartRoute = christofides.getTour(simpleSensorGraph);
-		var correctStartRoute = setStartEndLocation(randomStartRoute);
+		var sensorRoute = christofides.getTour(simpleSensorGraph);
 		
-		return correctStartRoute;
+		// I have graph of sensor edges
+		// I want to create a graph of drone edges
+		// add all drone edges and drone locations to new graph
+		
+		var droneRouteGraph = convertToDronePathsGraph(sensorRoute);
+		
+		// I have a graph of the points
+		// just get a walk from start to end node
+		
+		var droneRouteGraphWalk = getGraphWalk(droneRouteGraph);
+		
+		
+//		return droneRouteGraphWalk;
+		return droneRouteGraphWalk;
 	}
 
 }

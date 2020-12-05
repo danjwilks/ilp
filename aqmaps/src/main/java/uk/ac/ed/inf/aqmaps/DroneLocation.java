@@ -8,7 +8,6 @@ public class DroneLocation {
 	public double lon;
 	public double lat;
 	public Point point;
-	public String id;
 	public boolean isNearSensor;
 	public Sensor nearbySensor;
 	public boolean isStart = false;
@@ -17,7 +16,6 @@ public class DroneLocation {
 		this.lon = lon;
 		this.lat = lat;
 		this.point = Point.fromLngLat(lon, lat);
-		this.id = UUID.randomUUID().toString();
 		isNearSensor = false;
 		nearbySensor = null;
 	}
@@ -41,13 +39,7 @@ public class DroneLocation {
 
 		DroneLocation droneLocation = (DroneLocation) obj;
 		
-		double lonDiff = Math.abs(lon - droneLocation.lon);
-		double latDiff = Math.abs(lat - droneLocation.lat);
-		
-		if (lonDiff < 0.0001 && latDiff < 0.0001) {
-			return true;
-		}
-		return false;
+		return droneLocation.point.equals(point);
 		
 	}
 	
