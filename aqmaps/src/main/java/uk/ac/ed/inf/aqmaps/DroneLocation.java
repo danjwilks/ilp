@@ -39,8 +39,16 @@ public class DroneLocation {
 			return false;
 		}
 
-		DroneLocation loc = (DroneLocation) obj;
-		return id.equals(loc.id);
+		DroneLocation droneLocation = (DroneLocation) obj;
+		
+		double lonDiff = Math.abs(lon - droneLocation.lon);
+		double latDiff = Math.abs(lat - droneLocation.lat);
+		
+		if (lonDiff < 0.0001 && latDiff < 0.0001) {
+			return true;
+		}
+		return false;
+		
 	}
 	
 	@Override

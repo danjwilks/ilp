@@ -16,6 +16,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.tour.ChristofidesThreeHalvesApproxMetricTSP;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
+import org.jgrapht.graph.GraphWalk;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 
 public class RouteBuilder {
@@ -48,7 +49,7 @@ public class RouteBuilder {
 		return this;
 	}
 	
-	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
+ 	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
 		
 		ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 		
@@ -404,6 +405,25 @@ public class RouteBuilder {
 		
 		return simpleSensorGraph;
 	}
+
+	public GraphPath<DroneLocation, SensorPath> setStartEndLocation(
+			GraphPath<DroneLocation, SensorPath> randomStartRoute) {
+		
+		var edges = randomStartRoute.getEdgeList();
+		var verticies = randomStartRoute.getVertexList();
+		
+		var randomStartGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
+		
+		for (var vertex : verticies) {
+			randomStartGraph.addVertex(vertex);
+		}
+		for (var edge : edges) {
+			randomStartGraph.addEdge(edge.source, edge.sink, edge);
+		}
+		
+		return new GraphWalk<DroneLocation, SensorPath>(randomStartGraph, startEndLocation, startEndLocation,
+				verticies, edges, 0.1);
+	}
 	
 	public GraphPath<DroneLocation, SensorPath> buildBestRoute() {
 		
@@ -413,9 +433,10 @@ public class RouteBuilder {
 		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
 		var simpleSensorGraph = buildShortestPaths(validDroneLocationsGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
-		var routeFound = christofides.getTour(simpleSensorGraph);
+		var randomStartRoute = christofides.getTour(simpleSensorGraph);
+		var correctStartRoute = setStartEndLocation(randomStartRoute);
 		
-		return routeFound;
+		return correctStartRoute;
 	}
 
 }

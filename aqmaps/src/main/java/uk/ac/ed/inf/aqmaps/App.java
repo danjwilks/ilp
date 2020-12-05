@@ -1,11 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,8 +13,6 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Polygon;
 
 public class App {
-	
-	private static final HttpClient client = HttpClient.newHttpClient();
 	
 	private static void validateArgs(String[] args) {
 		
@@ -69,10 +62,9 @@ public class App {
 	
 	public static List<Polygon> getBuildings() throws IOException, InterruptedException {
 		
-		String buildingsJSONString = getJSONString("http://localhost/buildings/no-fly-zones.geojson");
-		System.out.println("buildings: " + FeatureCollection.fromJson(buildingsJSONString).toJson());
-		var features = FeatureCollection.fromJson(buildingsJSONString).features();
-		
+		String buildingsJsonString = WebClient.getBuildingJsonString();
+		System.out.println("buildings: " + FeatureCollection.fromJson(buildingsJsonString).toJson());
+		var features = FeatureCollection.fromJson(buildingsJsonString).features();
 		var buildings = new ArrayList<Polygon>();
 		for (var feature : features) {
 			if (feature.geometry().getClass().equals(Polygon.class)) {
@@ -83,25 +75,17 @@ public class App {
 	}
 	
 	public static List<Sensor> getSensors(String day, String month, String year) {
-		
-		String sensorsJSONString = getJSONString("http://localhost/maps/" + year + "/" + month + "/" + day + "/air-quality-data.json");
+		String sensorsJSONString = WebClient.getSensorsJsonString(day, month, year);
 		List<Sensor> sensors = buildSensors(sensorsJSONString);
 		return sensors;
 	}
 	
-	public static ThreeWordLocation getThreeWordLocation(Sensor sensor) {
+	public static What3Words getThreeWordLocation(Sensor sensor) {
 		String words = sensor.location.replaceAll("\\.", "/");
-		String threeWordLocationURL = "http://localhost/words/" + words + "/details.json";
-		String locationJSONString = getJSONString(threeWordLocationURL);
-		ThreeWordLocation threeWordLocation = buildThreeWordLocation(locationJSONString);
-		return threeWordLocation;
+		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
+		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
+		return what3Words;
 		
-	}
-	
-	public static ThreeWordLocation buildThreeWordLocation(String locationJSONString) {
-		
-		var threeWordLocation = new Gson().fromJson(locationJSONString, ThreeWordLocation.class);
-		return threeWordLocation;
 	}
 	
 	public static List<Sensor> buildSensors(String sensorsJSONString) {
@@ -114,30 +98,12 @@ public class App {
     	List<Sensor> sensors = new Gson().fromJson(sensorsJSONString, listType);
     	
     	for (var sensor : sensors) {
-    		ThreeWordLocation location = getThreeWordLocation(sensor);
-    		sensor.setLongitude(location.coordinates.lng);
-    		sensor.setLatitude(location.coordinates.lat);
+    		What3Words what3Words = getThreeWordLocation(sensor);
+    		sensor.setLongitude(what3Words.coordinates.lng);
+    		sensor.setLatitude(what3Words.coordinates.lat);
     	}
     	
     	return sensors;
-	}
-	
-	public static String getJSONString(String urlString) {
-    	var request = HttpRequest.newBuilder()
-    	.uri(URI.create(urlString))
-    	.build();
-    	HttpResponse<String> response;
-		try {
-			response = client.send(request, BodyHandlers.ofString());
-			if (response.statusCode() == 200) {
-				return response.body();
-	    	}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return "";
 	}
 	
     public static void main( String[] args ) throws IOException, InterruptedException {
@@ -164,7 +130,7 @@ public class App {
     			.buildBestRoute();
     	
     	var drone = new Drone(startLocation, date);
-    	drone.traverse(bestRoute);
+    	drone.collectPollutionData(bestRoute);
     	
     }
 }
