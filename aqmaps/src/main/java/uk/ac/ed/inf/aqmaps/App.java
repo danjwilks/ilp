@@ -4,8 +4,13 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -105,8 +110,8 @@ public class App {
     	
     	return sensors;
 	}
-	
-    public static void main( String[] args ) throws IOException, InterruptedException {
+
+	public static void main( String[] args ) throws IOException, InterruptedException {
     	
     	validateArgs(args);
     	
@@ -131,6 +136,8 @@ public class App {
     	
     	var drone = new Drone(startLocation, date);
     	drone.collectPollutionData(bestRoute);
+    	
+    	FileHandler.writeToFile(drone.droneRecords);
     	
     }
 }

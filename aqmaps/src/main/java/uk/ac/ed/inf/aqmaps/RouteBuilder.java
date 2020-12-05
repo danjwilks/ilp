@@ -76,7 +76,7 @@ public class RouteBuilder {
 			isShiftedRow = true;
 		}
 		
-		double latDecrement = Math.sqrt(Math.pow(0.0003, 2) - Math.pow(0.00015, 2)); // figure out what is the triangle height
+		double latDecrement = Math.sqrt(Math.pow(0.0003, 2) - Math.pow(0.00015, 2));
 		double lonIncrement = 0.0003;
 		double rowShift = 0.00015;
 		
@@ -84,9 +84,9 @@ public class RouteBuilder {
 			var droneLocationsRow = new ArrayList<DroneLocation>();
 			for (double currLon = upperLeftLonStart; currLon < lowerRightLonEnd; currLon += lonIncrement) {
 				if (isShiftedRow) {
-					droneLocationsRow.add(new DroneLocation(currLon + rowShift, currLat));
+					droneLocationsRow.add(new DroneLocation(round(currLon + rowShift), round(currLat)));
 				} else {
-					droneLocationsRow.add(new DroneLocation(currLon, currLat));
+					droneLocationsRow.add(new DroneLocation(round(currLon), round(currLat)));
 				}
 			}
 			if (isShiftedRow) {
@@ -99,13 +99,14 @@ public class RouteBuilder {
 		
 		return triangleGrid;
 	}
+ 	
+ 	private double round(double num) {
+ 		return (double)Math.round(num * 100000d) / 100000d;
+ 	}
 	
 	public HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 		
-		// add horizontal
-		// add vertical
 		var allPaths = new HashSet<DronePath>();
-		// all row
 		
 		boolean isRowShifted = false;
 		
@@ -266,7 +267,7 @@ public class RouteBuilder {
 		return false;
 	}
 	
-	private void buildFlyZone() {
+	private void setFlyZone() {
 		
 		this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON, ULLAT);
 		this.upperRightBoundaryPoint = Point.fromLngLat(LRLON, ULLAT);
@@ -392,7 +393,6 @@ public class RouteBuilder {
 				break;
 			}
 		}
-		
 		return droneLocationsToVisit;
 	}
 	
@@ -402,7 +402,7 @@ public class RouteBuilder {
 		
 		var droneLocationsToVisitList = new ArrayList<DroneLocation>();
 		droneLocationsToVisitList.addAll(droneLocationsToVisitSet);
-		
+		int count = 0;
 		for (int sourceIndex = 0; sourceIndex < droneLocationsToVisitList.size(); sourceIndex++) {
 			for (int sinkIndex = sourceIndex + 1; sinkIndex < droneLocationsToVisitList.size(); sinkIndex++) {
 				
@@ -420,44 +420,111 @@ public class RouteBuilder {
 				var sensorPath = new SensorPath(vertices, edges, sourceDroneLocation, sinkDroneLocation);
 				simpleSensorGraph.addEdge(sourceDroneLocation, sinkDroneLocation, sensorPath);
 				simpleSensorGraph.setEdgeWeight(sensorPath, sensorPath.weight);
-				
+				count++;
+			}
+			
+		}
+		System.out.println(count);
+		return simpleSensorGraph;
+	}
+	
+	private List<Integer> buildCorrectOrderSensorIndexes(GraphPath<DroneLocation, SensorPath> sensorRouteGraph) {
+		var startEndIndex = findStartEndIndex(sensorRouteGraph);
+		
+		var indexes = new ArrayList<Integer>();
+		
+		for (int i = startEndIndex; i < sensorRouteGraph.getLength(); i++) {
+			indexes.add(i);
+		}
+		
+		for (int i = 0; i < startEndIndex; i++) {
+			indexes.add(i);
+		}
+		
+		return indexes;
+	}
+	
+	private int findStartEndIndex(GraphPath<DroneLocation, SensorPath> sensorRouteGraph) {
+		
+		var sensorDroneLocations = sensorRouteGraph.getVertexList();
+		
+		for (int i = 0; i < sensorDroneLocations.size(); i++) {
+			if (sensorDroneLocations.get(i).equals(startEndLocation)) {
+				return i;
 			}
 		}
 		
-		return simpleSensorGraph;
-	}
-
-	public GraphPath<DroneLocation, SensorPath> setStartEndLocation(
-			GraphPath<DroneLocation, SensorPath> randomStartRoute) {
-		
-		var edges = randomStartRoute.getEdgeList();
-		var verticies = randomStartRoute.getVertexList();
-		
-		var randomStartGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
-		
-		for (var vertex : verticies) {
-			randomStartGraph.addVertex(vertex);
-		}
-		for (var edge : edges) {
-			randomStartGraph.addEdge(edge.source, edge.sink, edge);
-		}
-		
-		return new GraphWalk<DroneLocation, SensorPath>(randomStartGraph, startEndLocation, startEndLocation,
-				verticies, edges, 0.1);
+		return 0;
 	}
 	
-	public GraphPath<DroneLocation, SensorPath> buildBestRoute() {
+	private List<DroneLocation> parseDroneLocations(GraphPath<DroneLocation, SensorPath> sensorRoute) {
 		
-		buildFlyZone();
+		var orderedDroneLocationPath = new ArrayList<DroneLocation>();
+		var sensorPaths = sensorRoute.getEdgeList();
+		var sensorDroneLocations = sensorRoute.getVertexList();
+
+		var sensorIndexes = buildCorrectOrderSensorIndexes(sensorRoute);
+		System.out.println(sensorIndexes);
+				
+		for (var sensorIndex : sensorIndexes) {
+			
+			var sourceSensorDroneLocation = sensorDroneLocations.get(sensorIndex);
+			
+
+			var sensorPath = sensorPaths.get(sensorIndex);
+			var dronePaths = sensorPath.getLocationsFrom(sourceSensorDroneLocation);
+			
+			var currentDroneLocation = sourceSensorDroneLocation;
+			
+			for (int droneIndex = 0; droneIndex < dronePaths.size(); droneIndex++) {
+				
+				orderedDroneLocationPath.add(currentDroneLocation);
+				var dronePath = dronePaths.get(droneIndex);
+				var nextDroneLocation = dronePath.connectingDroneLocation(currentDroneLocation);
+				currentDroneLocation = nextDroneLocation;
+			}
+			
+		}
+		orderedDroneLocationPath.add(startEndLocation);
+		
+		System.out.println("orderedDroneLocationPath vertex list size " + orderedDroneLocationPath.size());
+		
+		return orderedDroneLocationPath;
+		
+	}
+	
+	public void printTour(GraphPath<DroneLocation, SensorPath> sensorRoute) {
+		
+		var fs = new ArrayList<Feature>(); 
+		for (var n : sensorRoute.getVertexList()) {
+			fs.add(Feature.fromGeometry(n.point));
+		}
+		for (var e : sensorRoute.getEdgeList()) {
+			for (var ps : e.vertex1ToVertex2) {
+				var line = LineString.fromLngLats(Arrays.asList(ps.vertex1.point, ps.vertex2.point));
+				fs.add(Feature.fromGeometry(line));
+			}
+		}
+		System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
+	}
+	
+	public List<DroneLocation> buildBestRoute() {
+		
+		setFlyZone();
 		var triangleGraph = buildTriangleGraph();
 		var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
 		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
 		var simpleSensorGraph = buildShortestPaths(validDroneLocationsGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
-		var randomStartRoute = christofides.getTour(simpleSensorGraph);
-		var correctStartRoute = setStartEndLocation(randomStartRoute);
+		var randomStartSensorRoute = christofides.getTour(simpleSensorGraph);
 		
-		return correctStartRoute;
+		printTour(randomStartSensorRoute);
+		
+		System.out.println("chrisofides algo path size: " + randomStartSensorRoute.getEdgeList().size());
+		var orderedDroneLocationPath = parseDroneLocations(randomStartSensorRoute);
+		return orderedDroneLocationPath;
+		
+
 	}
 
 }

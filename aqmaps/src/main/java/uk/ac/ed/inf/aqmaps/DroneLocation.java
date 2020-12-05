@@ -22,6 +22,17 @@ public class DroneLocation {
 		nearbySensor = null;
 	}
 	
+	public int calcAngleTo(DroneLocation adjacentDroneLocation) {
+		
+		double angle = Math.toDegrees(Math.atan2(adjacentDroneLocation.lon - lon, adjacentDroneLocation.lat - lat));
+
+	    if(angle < 0){
+	        angle += 360;
+	    }
+	    
+	    return (int) Math.round(angle);
+	}
+	
 	@Override
 	public int hashCode() {
 		return point.hashCode();

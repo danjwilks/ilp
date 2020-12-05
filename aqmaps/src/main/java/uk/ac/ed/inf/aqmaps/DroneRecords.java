@@ -10,12 +10,15 @@ import com.mapbox.geojson.Point;
 
 public class DroneRecords {
 	
+	String date;
 	List<Feature> features;
-	StringBuilder pathTextFile;
+	List<String> flightPathTextFile;
+	int lineCount = 0;
 	
-	public DroneRecords() {
+	public DroneRecords(String date) {
+		this.date = date;
 		this.features = new ArrayList<>();
-		this.pathTextFile = new StringBuilder();
+		this.flightPathTextFile = new ArrayList<>();
 	}
 	
 	public Feature buildPathFeature(DroneLocation source, DroneLocation sink) {
@@ -27,19 +30,38 @@ public class DroneRecords {
 		return feature;
 	}
 	
-	public String buildPathTextLine(DroneLocation source, DroneLocation sink) {
+	public String buildTextFileLine(DroneLocation source, DroneLocation sink) {
 		
-		return "";
+		String textFileLine = "";
+		
+		String nearBySensorLocation = "null";
+		if (sink.isNearSensor) { 
+			nearBySensorLocation = sink.nearbySensor.location;
+		}
+		
+		var directionDegree = source.calcAngleTo(sink);
+		
+		textFileLine += lineCount                       + ",";
+		textFileLine += String.valueOf(source.lon)      + ",";
+		textFileLine += String.valueOf(source.lat)      + ",";
+		textFileLine += String.valueOf(directionDegree) + ",";
+		textFileLine += String.valueOf(sink.lon)        + ",";
+		textFileLine += String.valueOf(sink.lat)        + ",";  
+		textFileLine += nearBySensorLocation;
+		
+		return textFileLine;
 		
 	}
 	
 	public void addPath(DroneLocation source, DroneLocation sink) {
 		
+		lineCount++;
+		
 		var pathFeature = buildPathFeature(source, sink);
 		features.add(pathFeature);
 		
-		var pathTextLine = buildPathTextLine(source, sink);
-		pathTextFile.append(pathTextLine);
+		var pathTextFileLine = buildTextFileLine(source, sink);
+		flightPathTextFile.add(pathTextFileLine);
 		
 	}
 	
