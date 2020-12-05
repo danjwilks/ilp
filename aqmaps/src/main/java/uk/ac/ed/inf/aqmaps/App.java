@@ -4,13 +4,8 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -65,24 +60,21 @@ public class App {
 	    return dateIsValid;
 	}
 	
-	public static List<Polygon> getBuildings() throws IOException, InterruptedException {
-		
-		String buildingsJsonString = WebClient.getBuildingJsonString();
-		System.out.println("buildings: " + FeatureCollection.fromJson(buildingsJsonString).toJson());
-		var features = FeatureCollection.fromJson(buildingsJsonString).features();
-		var buildings = new ArrayList<Polygon>();
-		for (var feature : features) {
-			if (feature.geometry().getClass().equals(Polygon.class)) {
-				buildings.add((Polygon) feature.geometry());
-			}
-		}
-		return buildings;
+	public static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
+		String noFlyZoneJsonString = WebClient.getBuildingJsonString();
+		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
+		return noFlyZoneCollection;
 	}
 	
-	public static List<Sensor> getSensors(String day, String month, String year) {
-		String sensorsJSONString = WebClient.getSensorsJsonString(day, month, year);
-		List<Sensor> sensors = buildSensors(sensorsJSONString);
-		return sensors;
+	public static SensorCollection getSensorCollection(String day, String month, String year) {
+		var sensorJsonString = WebClient.getSensorsJsonString(day, month, year);
+    	var sensorCollection = SensorCollection.fromJsonString(sensorJsonString);
+    	for (var sensor : sensorCollection.getSensors()) {
+    		What3Words what3Words = getThreeWordLocation(sensor);
+    		sensor.setLongitude(what3Words.coordinates.lng);
+    		sensor.setLatitude(what3Words.coordinates.lat);
+    	}
+    	return sensorCollection;
 	}
 	
 	public static What3Words getThreeWordLocation(Sensor sensor) {
@@ -124,12 +116,13 @@ public class App {
     	int randomSeed = Integer.parseInt(args[5]);
     	int portNumber = Integer.parseInt(args[6]);
     	
-    	var buildings = getBuildings();
-    	var sensors = getSensors(day, month, year);
+    	var noFlyZones = getNoFlyZoneCollection();
+    	var sensors = getSensorCollection(day, month, year);
+    	
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
     	var bestRoute = new RouteBuilder()
-    			.setBuildings(buildings)
+    			.setNoFlyZones(noFlyZones)
     			.setSensors(sensors)
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();

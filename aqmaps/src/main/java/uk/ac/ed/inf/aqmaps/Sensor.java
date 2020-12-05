@@ -9,6 +9,10 @@ public class Sensor {
 	private double latitude;
 	private DroneLocation nearestDroneLocation;
 	
+	public void setLocation(String what3Words) {
+		this.location = what3Words;
+	}
+	
 	public void setLongitude(double lng) {
 		this.longitude = lng;
 	}

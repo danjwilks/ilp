@@ -29,8 +29,8 @@ public class RouteBuilder {
 	private static final double LRLON = -3.184319;
 	private static final double LRLAT = 55.942617;
 	
-	private List<Polygon> buildings;
-	private List<Sensor> sensors;
+	private NoFlyZoneCollection noFlyZoneCollection;
+	private SensorCollection sensorCollection;
 	private DroneLocation startEndLocation;
 	private Polygon flyZone;
 	private Point upperLeftBoundaryPoint;
@@ -39,12 +39,12 @@ public class RouteBuilder {
 	private Point lowerLeftBoundaryPoint;
 	private List<Point> boundaryPointsList;
 	
-	public RouteBuilder setBuildings(List<Polygon> buildings) {
-		this.buildings = buildings;
+	public RouteBuilder setNoFlyZones(NoFlyZoneCollection noFlyZoneCollection) {
+		this.noFlyZoneCollection = noFlyZoneCollection;
 		return this;
 	}
-	public RouteBuilder setSensors(List<Sensor> sensors) {
-		this.sensors = sensors;
+	public RouteBuilder setSensors(SensorCollection sensorCollection) {
+		this.sensorCollection = sensorCollection;
 		return this;
 	}
 	public RouteBuilder setStartEndLocation(DroneLocation startEndLocation) {
@@ -211,8 +211,8 @@ public class RouteBuilder {
 		
 		var dronePoint = droneLocation.point;
 		
-		for (var building : buildings) {
-			if (TurfJoins.inside(dronePoint, building)) {
+		for (var noFlyZone : noFlyZoneCollection.getNoFlyZones()) {
+			if (TurfJoins.inside(dronePoint, noFlyZone)) {
 				return true;
 			}
 		}
@@ -236,7 +236,7 @@ public class RouteBuilder {
 		var startDroneLocation = dronePath.vertex1;
 		var endDroneLocation = dronePath.vertex2;
 		
-		for (var building : buildings) {
+		for (var building : noFlyZoneCollection.getNoFlyZones()) {
 			
 			if (locationOverBuildings(startDroneLocation) || locationOverBuildings(endDroneLocation)) {
 				return true;
@@ -375,7 +375,7 @@ public class RouteBuilder {
 		
 		var droneLocationsToVisit = new HashSet<DroneLocation>();
 		
-		for (var sensor : sensors) {
+		for (var sensor : sensorCollection.getSensors()) {
 			for (var droneLocation : triangleGraph.vertexSet()) {
 				if (sensorIsWithinDistance(sensor, droneLocation)) {
 					droneLocationsToVisit.add(droneLocation);
