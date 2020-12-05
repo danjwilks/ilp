@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfJoins;
@@ -160,6 +163,24 @@ public class RouteBuilder {
 			
 		}
 		
+		
+		var fToPrint = new ArrayList<Feature>();
+		for (var path : allPaths) {
+			
+			var dist = Math.sqrt(
+					Math.pow(path.vertex1.lon - path.vertex2.lon, 2)
+					+ Math.pow(path.vertex1.lat - path.vertex2.lat, 2)
+					);
+			if (dist < 0.00029 || dist > 0.00031) {
+				System.out.println("error, triangle dist is wrong");
+			}
+			
+			var line = LineString.fromLngLats(Arrays.asList(path.vertex1.point,
+					path.vertex2.point));
+			fToPrint.add(Feature.fromGeometry(line));
+			
+		}
+		System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fToPrint).toJson());
 		return allPaths;
 		
 	}

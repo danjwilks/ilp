@@ -10,6 +10,13 @@ public class DronePath {
 		this.vertex2 = vertex2;
 	}
 	
+	public DroneLocation connectingDroneLocation(DroneLocation from) {
+		if (vertex1.equals(from)) {
+			return vertex2;
+		}
+		return vertex1;
+	}
+	
 	@Override
 	public String toString() {
 		return "edge between " + this.vertex1.toString() + " and " + this.vertex2.toString();
