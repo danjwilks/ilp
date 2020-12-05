@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -20,14 +21,9 @@ import com.google.gson.Gson;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
 
 public class App {
-	
-	private static final double ULLON = -3.192473;
-	private static final double ULLAT = 55.946233;
-	private static final double LRLON = -3.184319;
-	private static final double LRLAT = 55.942617;
-	private static final double[] FLYZONE = {ULLON, ULLAT, LRLON, LRLAT}; 
 	
 	private static final HttpClient client = HttpClient.newHttpClient();
 	
@@ -99,10 +95,19 @@ public class App {
 	    return dateIsValid;
 	}
 	
-	public static FeatureCollection getBuildings() throws IOException, InterruptedException {
+	public static List<Polygon> getBuildings() throws IOException, InterruptedException {
 		
 		String buildingsJSONString = getJSONString("http://localhost/buildings/no-fly-zones.geojson");
-		return FeatureCollection.fromJson(buildingsJSONString);		
+		System.out.println("buildings: " + FeatureCollection.fromJson(buildingsJSONString).toJson());
+		var features = FeatureCollection.fromJson(buildingsJSONString).features();
+		
+		var buildings = new ArrayList<Polygon>();
+		for (var feature : features) {
+			if (feature.geometry().getClass().equals(Polygon.class)) {
+				buildings.add((Polygon) feature.geometry());
+			}
+		}
+		return buildings;
 	}
 	
 	public static List<Sensor> getSensors(String day, String month, String year) {
@@ -178,13 +183,11 @@ public class App {
     	int randomSeed = Integer.parseInt(args[5]);
     	int portNumber = Integer.parseInt(args[6]);
     	
-
     	var buildings = getBuildings();
     	var sensors = getSensors(day, month, year);
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
     	var bestRoute = new RouteBuilder()
-    			.setFlyZone(FLYZONE)
     			.setBuildings(buildings)
     			.setSensors(sensors)
     			.setStartEndLocation(startLocation)

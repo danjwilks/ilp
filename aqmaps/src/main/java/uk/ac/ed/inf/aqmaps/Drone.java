@@ -321,42 +321,11 @@ public class Drone {
 			if (currentDroneLocation.isNearSensor) {
 				recordSensorInfo(currentDroneLocation);
 			}
-			
-			
-			
-//			// delete the point creation but keep if else statement
-//			if (currentDroneLocation.isStart) {
-//				var point = Point.fromLngLat(currentDroneLocation.lon, currentDroneLocation.lat); 
-//				var feature = Feature.fromGeometry(point);
-//				features.add(feature);
-//			} else { // is near a sensor
-//				gatherSensorReading(currentDroneLocation);
-//			}
-//			if (droneLocationToVisitIndex < verticies.size() - 2) {
-//				moveToNextDroneLocation(
-//						currentDroneLocation, 
-//						dronePathsToTraverse,
-//						nextDroneLocation.nearbySensor;
-//						);
-//			} else {
-//				moveToNextDroneLocation(currentDroneLocation, correctOrderSensorPaths.get(droneLocationToVisitIndex));
-//			}
 		}
 		
 		
     	FeatureCollection fc = FeatureCollection.fromFeatures(features);
-    	System.out.println(fc.toJson());
-		
-//		var lon = -3.192214965820312;
-//    	var lat = 55.944009105332775;
-//    	var point = Point.fromLngLat(lon, lat);
-//    	var feature = Feature.fromGeometry(point);
-//    	feature.addStringProperty("marker-symbol", "lighthouse");
-//    	feature.addStringProperty("location", "slips.mass.baking");
-//    	feature.addStringProperty("marker-color", "#00ff00");
-//    	feature.addStringProperty("color", "#00ff00");
-//    	
-
+    	System.out.println("traversal: " + fc.toJson());
 		
 	}
 

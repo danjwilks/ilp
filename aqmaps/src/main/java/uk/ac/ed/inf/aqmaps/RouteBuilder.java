@@ -1,37 +1,43 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.util.ArrayDeque;
+
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.Point;
+import com.mapbox.geojson.Polygon;
+import com.mapbox.turf.TurfJoins;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.tour.ChristofidesThreeHalvesApproxMetricTSP;
-import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
-import org.jgrapht.graph.GraphWalk;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 
 public class RouteBuilder {
 	
-	private double[] flyzone;
-	private FeatureCollection buildings;
+	private static final double ULLON = -3.192473;
+	private static final double ULLAT = 55.946233;
+	private static final double LRLON = -3.184319;
+	private static final double LRLAT = 55.942617;
+	
+	private List<Polygon> buildings;
 	private List<Sensor> sensors;
 	private DroneLocation startEndLocation;
+	private Polygon flyZone;
+	private Point upperLeftBoundaryPoint;
+	private Point upperRightBoundaryPoint;
+	private Point lowerRightBoundaryPoint;
+	private Point lowerLeftBoundaryPoint;
+	private List<Point> boundaryPointsList;
 	
-	public RouteBuilder setFlyZone(double[] flyzone) {
-		this.flyzone = flyzone;
-		return this;
-		
-	}
-	public RouteBuilder setBuildings(FeatureCollection buildings) {
+	public RouteBuilder setBuildings(List<Polygon> buildings) {
 		this.buildings = buildings;
 		return this;
 	}
@@ -44,23 +50,23 @@ public class RouteBuilder {
 		return this;
 	}
 	
-	public List<List<DroneLocation>> buildTriangleGrid() {
+	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
 		
 		ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 		
 		double upperLeftLonStart = startEndLocation.lon;
 		int numberOfRowsToLeft = 0;
-		while (upperLeftLonStart > flyzone[0]) {
+		while (upperLeftLonStart > ULLON) {
 			numberOfRowsToLeft++;
 			upperLeftLonStart -= 0.0003;
 		}
 		double upperLeftLatStart = startEndLocation.lat;
-		while (upperLeftLatStart < flyzone[1]) {
+		while (upperLeftLatStart < ULLAT) {
 			upperLeftLatStart += 0.0003;
 		}
 		
-		double lowerRightLonEnd = flyzone[2];
-		double lowerRightLatEnd = flyzone[3];
+		double lowerRightLonEnd = LRLON;
+		double lowerRightLatEnd = LRLAT;
 		
 		boolean isShiftedRow = false;
 		
@@ -92,14 +98,7 @@ public class RouteBuilder {
 		return triangleGrid;
 	}
 	
-	public List<List<DroneLocation>> buildAllPossibleLocations() {
-		
-		List<List<DroneLocation>> triangleGrid = buildTriangleGrid();
-		
-		return triangleGrid;
-	}
-	
-	public HashSet<DronePath> buildAllPossiblePaths(List<List<DroneLocation>> allPossibleDroneLocations) {
+	public HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 		
 		// add horizontal
 		// add vertical
@@ -108,46 +107,46 @@ public class RouteBuilder {
 		
 		boolean isRowShifted = false;
 		
-		for (int row = 0; row < allPossibleDroneLocations.size(); row++) {
-			for (int column = 0; column < allPossibleDroneLocations.get(row).size(); column++) {
+		for (int row = 0; row < triangleGridDroneLocations.size(); row++) {
+			for (int column = 0; column < triangleGridDroneLocations.get(row).size(); column++) {
 				
 				if (row > 1) {
 					allPaths.add(new DronePath(
-							allPossibleDroneLocations.get(row).get(column),
-							allPossibleDroneLocations.get(row - 1).get(column)
+							triangleGridDroneLocations.get(row).get(column),
+							triangleGridDroneLocations.get(row - 1).get(column)
 							));
 				}
 				
-				if (row < allPossibleDroneLocations.size() - 1) {
+				if (row < triangleGridDroneLocations.size() - 1) {
 					allPaths.add(new DronePath(
-							allPossibleDroneLocations.get(row).get(column),
-							allPossibleDroneLocations.get(row + 1).get(column))
+							triangleGridDroneLocations.get(row).get(column),
+							triangleGridDroneLocations.get(row + 1).get(column))
 							);
 				}
 				
 				if (column > 1) {
 					allPaths.add(new DronePath(
-							allPossibleDroneLocations.get(row).get(column),
-							allPossibleDroneLocations.get(row).get(column - 1))
+							triangleGridDroneLocations.get(row).get(column),
+							triangleGridDroneLocations.get(row).get(column - 1))
 							);
 				}
 				
-				if (column < allPossibleDroneLocations.get(row).size() - 1) {
+				if (column < triangleGridDroneLocations.get(row).size() - 1) {
 					allPaths.add(new DronePath(
-							allPossibleDroneLocations.get(row).get(column),
-							allPossibleDroneLocations.get(row).get(column + 1))
+							triangleGridDroneLocations.get(row).get(column),
+							triangleGridDroneLocations.get(row).get(column + 1))
 							);
 				}
 				
 				if (isRowShifted) {
-					if (row < allPossibleDroneLocations.size() - 1 && column < allPossibleDroneLocations.get(row).size() - 1) {
+					if (row < triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1) {
 						allPaths.add(new DronePath(
-								allPossibleDroneLocations.get(row).get(column),
-								allPossibleDroneLocations.get(row + 1).get(column + 1))
+								triangleGridDroneLocations.get(row).get(column),
+								triangleGridDroneLocations.get(row + 1).get(column + 1))
 								);
 						allPaths.add(new DronePath(
-								allPossibleDroneLocations.get(row).get(column),
-								allPossibleDroneLocations.get(row - 1).get(column + 1))
+								triangleGridDroneLocations.get(row).get(column),
+								triangleGridDroneLocations.get(row - 1).get(column + 1))
 								);
 					}
 				} 
@@ -170,21 +169,161 @@ public class RouteBuilder {
 		
 		var graph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
 		
-		List<List<DroneLocation>> allPossibleDroneLocations = buildAllPossibleLocations();
-		HashSet<DronePath> allPossibleDronePaths = buildAllPossiblePaths(allPossibleDroneLocations);
-		for (var rowOfDroneLocations : allPossibleDroneLocations) {
+		List<List<DroneLocation>> triangleGridDroneLocations = buildTriangleGridDroneLocations();
+		HashSet<DronePath> triangleGridDronePaths = buildTriangleGridDronePaths(triangleGridDroneLocations);
+		for (var rowOfDroneLocations : triangleGridDroneLocations) {
 			for (var droneLocation : rowOfDroneLocations) {
 				graph.addVertex(droneLocation);
 			}
 		}
 		
-		for (var dronePath : allPossibleDronePaths) {
+		for (var dronePath : triangleGridDronePaths) {
 			graph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
 			graph.setEdgeWeight(dronePath, 1);
 		}
 		
 		return graph;
 		
+	}
+	
+	private boolean locationOverBuildings(DroneLocation droneLocation) {
+		
+		var dronePoint = droneLocation.point;
+		
+		for (var building : buildings) {
+			if (TurfJoins.inside(dronePoint, building)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private boolean linesIntersect(Point line1Start, Point line1End, Point line2Start, Point line2End) {
+		
+		return Line2D.linesIntersect(
+				line1Start.longitude(), line1Start.latitude(),
+				line1End.longitude(), line1End.latitude(),
+				line2Start.longitude(), line2Start.latitude(),
+				line2End.longitude(), line2End.latitude()
+				);
+		
+	}
+	
+	private boolean dronePathIsOverBuildings(DronePath dronePath) {
+		
+		var startDroneLocation = dronePath.vertex1;
+		var endDroneLocation = dronePath.vertex2;
+		
+		for (var building : buildings) {
+			
+			if (locationOverBuildings(startDroneLocation) || locationOverBuildings(endDroneLocation)) {
+				return true;
+			}
+			
+			var buildingPoints = building.coordinates().get(0);
+			for (int startPointIndex = 0; startPointIndex < buildingPoints.size() -1; startPointIndex++) {
+				var buildingEdgeStartPoint = buildingPoints.get(startPointIndex);
+				var buildingEdgeEndPoint = buildingPoints.get(startPointIndex + 1);
+				
+				if (linesIntersect(startDroneLocation.point, endDroneLocation.point, buildingEdgeStartPoint, buildingEdgeEndPoint)) {
+					return true;
+				}
+			}
+		}
+		return false;
+		
+	}
+	
+	private boolean locationInsideFlyZone(DroneLocation droneLocation) {
+		
+		var dronePoint = droneLocation.point;
+		
+		if (TurfJoins.inside(dronePoint, flyZone)) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	private void buildFlyZone() {
+		
+		this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON, ULLAT);
+		this.upperRightBoundaryPoint = Point.fromLngLat(LRLON, ULLAT);
+		this.lowerRightBoundaryPoint = Point.fromLngLat(LRLON, LRLAT);
+		this.lowerLeftBoundaryPoint = Point.fromLngLat(ULLON, LRLAT);
+		
+		this.boundaryPointsList = Arrays.asList(
+				upperLeftBoundaryPoint, upperRightBoundaryPoint,
+				lowerRightBoundaryPoint, lowerLeftBoundaryPoint,
+				upperLeftBoundaryPoint);
+		
+		this.flyZone = Polygon.fromLngLats(Arrays.asList(boundaryPointsList));
+	}
+	
+	private boolean dronePathInsideFlyZone(DronePath dronePath) {
+		// TODO paths that are not inside flyzone and dont intersect.
+		
+		var startDroneLocation = dronePath.vertex1;
+		var endDroneLocation = dronePath.vertex2;
+		
+		if (!locationInsideFlyZone(startDroneLocation) 
+				|| !locationInsideFlyZone(endDroneLocation)) {
+			return false;
+		}
+		
+		for (int startPointIndex = 0; startPointIndex < boundaryPointsList.size() - 1; startPointIndex++) {
+			var boundaryStartPoint = boundaryPointsList.get(startPointIndex);
+			var boundaryEndPoint = boundaryPointsList.get(startPointIndex + 1);
+			
+			if (linesIntersect(startDroneLocation.point, endDroneLocation.point, boundaryStartPoint, boundaryEndPoint)) {
+				return false;
+			}
+			
+		}
+		
+		return true;
+	}
+	
+	private boolean isValidDronePath(DronePath dronePath) {
+		
+		if (dronePathIsOverBuildings(dronePath)) {
+			return false;
+		}
+		
+		if (!dronePathInsideFlyZone(dronePath)) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean isValidDroneLocation(DroneLocation droneLocation) {
+		return locationInsideFlyZone(droneLocation) && !locationOverBuildings(droneLocation);
+	}
+	
+	private Graph<DroneLocation, DronePath> buildValidDroneLocationsGraph(Graph<DroneLocation, DronePath> triangleGraph) {
+		
+		var validDroneLocationsGraph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
+		
+		var droneLocations = triangleGraph.vertexSet();
+		
+		for (var droneLocation : droneLocations) {
+			if (isValidDroneLocation(droneLocation)) {
+				validDroneLocationsGraph.addVertex(droneLocation);
+			}
+		}
+		
+		var dronePaths = triangleGraph.edgeSet();
+		
+		for (var dronePath : dronePaths) {
+			if (isValidDronePath(dronePath)) {
+				validDroneLocationsGraph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
+				validDroneLocationsGraph.setEdgeWeight(dronePath, 1);
+			}
+		}
+		
+		return validDroneLocationsGraph;
 	}
 	
 	public boolean sensorIsWithinDistance(Sensor sensor, DroneLocation droneLocation) {
@@ -223,12 +362,18 @@ public class RouteBuilder {
 					droneLocation.isNearSensor = true;
 					droneLocation.nearbySensor = sensor;
 					break;
-				} else if (isStartEndLocation(droneLocation)) {
-					droneLocation.isStart = true;
-					droneLocationsToVisit.add(droneLocation);
 				}
 			}
 		}
+		
+		for (var droneLocation : triangleGraph.vertexSet()) {
+			if (isStartEndLocation(droneLocation)) {
+				droneLocation.isStart = true;
+				droneLocationsToVisit.add(droneLocation);
+				break;
+			}
+		}
+		
 		return droneLocationsToVisit;
 	}
 	
@@ -265,9 +410,11 @@ public class RouteBuilder {
 	
 	public GraphPath<DroneLocation, SensorPath> buildBestRoute() {
 		
+		buildFlyZone();
 		var triangleGraph = buildTriangleGraph();
-		var droneLocationsToVisit = findDroneLocationsToVisit(triangleGraph);
-		var simpleSensorGraph = buildShortestPaths(triangleGraph, droneLocationsToVisit);
+		var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
+		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
+		var simpleSensorGraph = buildShortestPaths(validDroneLocationsGraph, droneLocationsToVisit);
 		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
 		var routeFound = christofides.getTour(simpleSensorGraph);
 		
