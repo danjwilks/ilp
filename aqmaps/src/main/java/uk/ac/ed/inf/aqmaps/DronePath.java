@@ -17,6 +17,24 @@ public class DronePath {
 		return vertex1;
 	}
 	
+	public int directionDegreeFrom(DroneLocation from) {
+		
+	    return calcDirectionDegree(from, this.connectingDroneLocation(from));
+		
+	}
+	
+	private int calcDirectionDegree(DroneLocation source, DroneLocation sink) {
+		
+	    double angle = Math.toDegrees(Math.atan2(sink.lon - source.lon, sink.lat - source.lat));
+
+	    if(angle < 0){
+	        angle += 360;
+	    }
+	    
+	    return (int) Math.round(angle);
+		
+	}
+	
 	@Override
 	public String toString() {
 		return "edge between " + this.vertex1.toString() + " and " + this.vertex2.toString();
