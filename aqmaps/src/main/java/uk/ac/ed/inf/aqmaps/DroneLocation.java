@@ -1,6 +1,5 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.util.HashSet;
 import java.util.UUID;
 import com.mapbox.geojson.Point;
 

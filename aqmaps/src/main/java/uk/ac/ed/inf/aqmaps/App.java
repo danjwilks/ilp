@@ -8,19 +8,13 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.Gson;
-import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 
 public class App {
@@ -49,12 +43,9 @@ public class App {
 			throw new NumberFormatException("Day, month, year, random seed and port number should be integer values.");
 		}
 		
-		double xCoordinate = -1.0;
-		double yCoordinate = -1.0;
-		
 		try {
-			xCoordinate = Double.parseDouble(args[3]);
-			yCoordinate = Double.parseDouble(args[4]);
+			Double.parseDouble(args[3]);
+			Double.parseDouble(args[4]);
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("X or Y starting coordinate should be doubles.");
 		}
@@ -63,25 +54,6 @@ public class App {
 			throw new DateTimeException("Day or month or year is invalid");
 		}
 		
-		if (!coordinatesAreValid(xCoordinate, yCoordinate)) {
-			throw new IllegalArgumentException("X and Y coordinate are invalid.");
-		}
-		
-	}
-	
-	public static boolean coordinatesAreValid(double xCoordinate, double yCoordinate) {
-		
-		// TODO see if starting coordinates are within a no fly zone.
-		
-		return coordintesAreWithinBounds(xCoordinate, yCoordinate);
-		
-	}
-	
-	public static boolean coordintesAreWithinBounds(double xCoordinate, double yCoordinate) {
-		
-		// TODO see if coordinates are within boundaries.
-		
-		return true;
 	}
 	
 	public static boolean dateIsValid(int day, int month, int year) {
@@ -170,8 +142,6 @@ public class App {
 	
     public static void main( String[] args ) throws IOException, InterruptedException {
     	
-//    	args = 15 06 2021 55.9444 -3.1878 5678 80
-    	
     	validateArgs(args);
     	
     	String day = args[0];
@@ -195,38 +165,6 @@ public class App {
     	
     	var drone = new Drone(startLocation, date);
     	drone.traverse(bestRoute);
-//    	
-//    	var lon = -3.192214965820312;
-//    	var lat = 55.944009105332775;
-//    	var point = Point.fromLngLat(lon, lat);
-//    	var feature = Feature.fromGeometry(point);
-//    	feature.addStringProperty("marker-symbol", "lighthouse");
-//    	feature.addStringProperty("location", "slips.mass.baking");
-//    	feature.addStringProperty("marker-color", "#00ff00");
-//    	feature.addStringProperty("color", "#00ff00");
-//    	
-//    	List<Feature> features = new ArrayList<Feature>();
-//    	features.add(feature);
-//    	FeatureCollection fc = FeatureCollection.fromFeatures(features);
-//    	System.out.println(fc.toJson());
-    	
-//    	words = slips mass baking
-//    	color = #00ff00
-//    	marker-color = #00ff00
-//    	marker-symbol = lighthouse, but what value?
-    	
-    	
-    	
-    	
     	
     }
-    
-    
-    
-//    markers have: 
-    
-//    location — the What3Words location string;
-//    • rgb-string — the HTML colour of this marker represented as a hexadecimal Red-Green-Blue string;
-//    • marker-color — identical to rgb-string, but will be rendered by http://geojson.io; and
-//    • marker-symbol — a symbol from the Maki icon set (https://labs.mapbox.com/maki-icons/)
 }

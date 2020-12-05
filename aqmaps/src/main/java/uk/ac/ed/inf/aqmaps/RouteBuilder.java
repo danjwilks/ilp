@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfJoins;
@@ -262,7 +260,6 @@ public class RouteBuilder {
 	}
 	
 	private boolean dronePathInsideFlyZone(DronePath dronePath) {
-		// TODO paths that are not inside flyzone and dont intersect.
 		
 		var startDroneLocation = dronePath.vertex1;
 		var endDroneLocation = dronePath.vertex2;

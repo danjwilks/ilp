@@ -12,20 +12,19 @@ public class Sensor {
 	public void setLongitude(double lng) {
 		this.longitude = lng;
 	}
+	
 	public void setLatitude(double lat) {
 		this.latitude = lat;
 	}
+	
 	public double getLongitude() {
 		return longitude;
 	}
+	
 	public double getLatitude() {
 		return latitude;
 	}
 
-	
-//	  "location": "shut.stands.media",
-//    "battery": 61.31742,
-//    "reading": "89.3"
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -46,9 +45,11 @@ public class Sensor {
 	public String toString() {
 		return location;
 	}
+	
 	public void setNearestDroneLocation(DroneLocation droneLocation) {
 		nearestDroneLocation = droneLocation;
 	}
+	
 	public DroneLocation getNearestDroneLocation() {
 		return nearestDroneLocation;
 	}

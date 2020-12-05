@@ -7,7 +7,6 @@ import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.jgrapht.GraphPath;
-import org.jgrapht.graph.GraphWalk;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
@@ -81,7 +79,6 @@ public class Drone {
 		if (sensor.battery < tenPercent) {
 			return BLACK;
 		}
-//		sensor.reading = null;
 		double polutionLevel = Double.parseDouble(sensor.reading);
 		
 		if (0 <= polutionLevel && polutionLevel < 32) {
