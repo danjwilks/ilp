@@ -122,6 +122,7 @@ public class Drone {
 		
 		recordDronePath(currentDronePathSource, currentDronePathSink);
 //		TODO: merge below with above.
+//		we need to add sensor location.
 		addPathInfoToLogFile(currentDronePathSource, currentDronePathSink, trueSensorPathSink);
 		
 		
@@ -142,6 +143,7 @@ public class Drone {
 		
 		for (var dronePath: edgeToTraverse) {
 			var currentDronePathSink = currentDronePathSource.equals(dronePath.vertex1) ? dronePath.vertex2 : dronePath.vertex1;
+//			TODO edit below line, try to remove trueSensorPathSink
 			recordMovementDetails(currentDronePathSource, currentDronePathSink, trueSensorPathSink);
 			currentDronePathSource = currentDronePathSink;
 		}
