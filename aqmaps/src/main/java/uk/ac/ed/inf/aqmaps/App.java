@@ -93,14 +93,14 @@ public class App {
     	
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
-    	var bestRoute = new RouteBuilder()
+    	var bestRoute = new Route.RouteBuilder()
     			.setNoFlyZones(noFlyZones)
-    			.setSensors(sensors)
+    			.setAvailableSensors(sensors)
     			.setStartEndLocation(startLocation)
     			.buildBestRoute();
     	
     	var drone = new Drone(startLocation, date);
-    	drone.collectPollutionData(bestRoute);
+    	drone.traverse(bestRoute);
     	
     	FileHandler.writeToFile(drone.droneRecords);
     	

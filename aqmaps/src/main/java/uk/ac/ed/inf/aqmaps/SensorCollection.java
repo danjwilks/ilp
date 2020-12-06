@@ -15,8 +15,16 @@ public class SensorCollection {
 		this.sensors = sensors;
 	}
 	
+	public SensorCollection() {
+		this.sensors = new ArrayList<>();
+	}
+	
 	public List<Sensor> getSensors() {
 		return sensors;
+	}
+	
+	public void add(Sensor sensor) {
+		this.sensors.add(sensor);
 	}
 	
 	public static SensorCollection fromJsonString(String jsonString) {

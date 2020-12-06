@@ -8,14 +8,28 @@ public class SensorReader {
 	private static final double MAX_BATTERY = 100.0;
 	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
 	
-	public SensorReading read(Sensor sensor) {
+	public SensorInformation getUnvisitedInfo(Sensor sensor) {
+		
+		var location = readWhat3Words(sensor);
+		
+		SensorInformation reading = new SensorInformation.SensorInformationBuilder()
+				.setLongitude(sensor.getLongitude())
+				.setLatitude(sensor.getLatitude())
+				.setLocation(location)
+				.build();
+		
+		return reading;
+		
+	}
+	
+	public SensorInformation read(Sensor sensor) {
 		
 		var location = readWhat3Words(sensor);
 		var rgbString = readFeatureRgbString(sensor);
 		var markerColor = readMarkerColor(sensor);
 		var markerSymbol = readMarkerSymbol(sensor);
 		
-		SensorReading reading = new SensorReading.SensorReadingBuilder()
+		SensorInformation reading = new SensorInformation.SensorInformationBuilder()
 				.setLongitude(sensor.getLongitude())
 				.setLatitude(sensor.getLatitude())
 				.setLocation(location)
@@ -90,6 +104,5 @@ public class SensorReader {
 		}
 		return hexString;
 	}
-	
 
 }

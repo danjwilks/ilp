@@ -25,23 +25,23 @@ public class Drone {
 	}
 	
 	public void recordSensorDetails(Sensor sensor) {
-		
-		var sensorReading = sensorReader.read(sensor);
-		droneRecords.addSensorReading(sensorReading);
-		
+		var sensorInformation = sensorReader.read(sensor);
+		droneRecords.addSensorInformation(sensorInformation);
 	}
 	
 	public void recordDronePath(DroneLocation source, DroneLocation sink) {
-		
 		droneRecords.addPath(source, sink);
-		
 	}
 
 	public void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
 		recordDronePath(source, sink);
 	}
 
-	public void collectPollutionData(List<DroneLocation> droneLocationsToVisit) {
+	public void traverse(Route bestRoute) {
+		
+		recordUnvisitedSensors(bestRoute.getUnvisitedSensors());
+		
+		var droneLocationsToVisit = bestRoute.getDroneLocationsToVisit();
 		
 		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < droneLocationsToVisit.size() - 1; droneLocationToVisitIndex++) {
 			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
@@ -60,9 +60,16 @@ public class Drone {
 			}
 		}
 		
-		
     	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.features);
     	System.out.println("traversal: " + fc.toJson());
+		
+	}
+
+	private void recordUnvisitedSensors(SensorCollection unvisitedSensors) {
+		
+		for (var sensor : unvisitedSensors.getSensors()) {
+			droneRecords.addSensorInformation(sensorReader.getUnvisitedInfo(sensor));
+		}
 		
 	}
 

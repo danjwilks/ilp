@@ -65,7 +65,7 @@ public class DroneRecords {
 		
 	}
 	
-	public void addProperties(Feature sensorFeature, SensorReading reading) {
+	public void addProperties(Feature sensorFeature, SensorInformation reading) {
 		
 		sensorFeature.addStringProperty("location", reading.getLocation());
 		sensorFeature.addStringProperty("rgb-string", reading.getRgbString());
@@ -76,7 +76,7 @@ public class DroneRecords {
 		
 	}
 	
-	public void addSensorReading(SensorReading reading) {
+	public void addSensorInformation(SensorInformation reading) {
 		
 		var sensorPoint = Point.fromLngLat(reading.getLongitude(), reading.getLatitude());
 		var sensorFeature = Feature.fromGeometry(sensorPoint);
