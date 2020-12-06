@@ -21,6 +21,7 @@ public class Sensor {
 		this.latitude = lat;
 	}
 	
+	
 	public double getLongitude() {
 		return longitude;
 	}

@@ -4,6 +4,7 @@ package uk.ac.ed.inf.aqmaps;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +28,8 @@ public class RouteBuilder {
 	private static final double ULLAT = 55.946233;
 	private static final double LRLON = -3.184319;
 	private static final double LRLAT = 55.942617;
-	private static final int MAX_NUMBER_OF_MOVES = 150;
+	private static final int MAX_NUMBER_OF_MOVES = 60;
+	private static final double MAX_DIST_TO_SENSOR = 0.0002;
 	
 	private NoFlyZoneCollection noFlyZoneCollection;
 	private SensorCollection sensorCollection;
@@ -346,16 +348,18 @@ public class RouteBuilder {
 		return validDroneLocationsGraph;
 	}
 	
+	public double calcDist(double lon1, double lat1, double lon2, double lat2) {
+		return Math.sqrt(Math.pow(lon1 - lon2, 2) + Math.pow(lat1 - lat2, 2));
+	}
+	
 	public boolean sensorIsWithinDistance(Sensor sensor, DroneLocation droneLocation) {
 		
-		double distance = Math.sqrt(
-				Math.pow(sensor.getLongitude() - droneLocation.lon, 2)
-				+ Math.pow(sensor.getLatitude() - droneLocation.lat, 2)
+		double distance = calcDist(
+				sensor.getLongitude(), sensor.getLatitude(),
+				droneLocation.lon, droneLocation.lat
 				);
 		
-		double maxDist = 0.0002;
-		
-		return distance < maxDist;
+		return distance <= MAX_DIST_TO_SENSOR;
 		
 	}
 	
@@ -397,18 +401,17 @@ public class RouteBuilder {
 	}
 	
 	private Graph<DroneLocation, SensorPath> buildShortestPathCompleteSensorGraph(
-			Graph<DroneLocation, DronePath> triangleGraph, Set<DroneLocation> droneLocationsToVisitSet) {
+			Graph<DroneLocation, DronePath> triangleGraph, List<DroneLocation> sortedDroneLocationsToVisit) {
 		
 		var simpleSensorGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
+		System.out.println(sortedDroneLocationsToVisit.size());
 		
-		var droneLocationsToVisitList = new ArrayList<DroneLocation>();
-		droneLocationsToVisitList.addAll(droneLocationsToVisitSet);
 		int count = 0;
-		for (int sourceIndex = 0; sourceIndex < droneLocationsToVisitList.size(); sourceIndex++) {
-			for (int sinkIndex = sourceIndex + 1; sinkIndex < droneLocationsToVisitList.size(); sinkIndex++) {
+		for (int sourceIndex = 0; sourceIndex < sortedDroneLocationsToVisit.size(); sourceIndex++) {
+			for (int sinkIndex = sourceIndex + 1; sinkIndex < sortedDroneLocationsToVisit.size(); sinkIndex++) {
 				
-				var sourceDroneLocation = droneLocationsToVisitList.get(sourceIndex);
-				var sinkDroneLocation = droneLocationsToVisitList.get(sinkIndex);
+				var sourceDroneLocation = sortedDroneLocationsToVisit.get(sourceIndex);
+				var sinkDroneLocation = sortedDroneLocationsToVisit.get(sinkIndex);
 				
 				var dijk = new BidirectionalDijkstraShortestPath<DroneLocation, DronePath>(triangleGraph);
 				var graphWalk = dijk.getPath(sourceDroneLocation, sinkDroneLocation);
@@ -523,16 +526,36 @@ public class RouteBuilder {
 		return false;
 	}
 	
+	private void removeFarthestFromStartEnd(List<DroneLocation> sortedDroneLocationsToVisit) {
+		sortedDroneLocationsToVisit.remove(sortedDroneLocationsToVisit.size() -1);
+		
+	}
+	
+	private List<DroneLocation> sortDroneLocationsToVisit(Set<DroneLocation> droneLocationsToVisitSet) {
+		 ArrayList<DroneLocation> droneLocationsToVisitList = new ArrayList<DroneLocation>(droneLocationsToVisitSet);
+		 System.out.println("number of droneLocations in the set: " + droneLocationsToVisitSet.size());
+		 Collections.sort(droneLocationsToVisitList, 
+				 (a, b) -> Double.compare(
+						 a.calcDistTo(startEndLocation),
+				         b.calcDistTo(startEndLocation)
+		 	     ));
+		
+		 return droneLocationsToVisitList;
+	}
+	
 	public List<DroneLocation> buildBestRoute() {
 		
 		setFlyZone();
 		var triangleGraph = buildTriangleGraph();
 		var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
 		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
+		System.out.println("look for size: " + droneLocationsToVisit.size());
+		var sortedDroneLocationsToVisit = sortDroneLocationsToVisit(droneLocationsToVisit);
 		
 		do {
+			System.out.println("hello bitch");
 			var completeSensorGraph = buildShortestPathCompleteSensorGraph(validDroneLocationsGraph, 
-					droneLocationsToVisit);
+					sortedDroneLocationsToVisit);
 			
 			var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
 			var sensorTour = christofides.getTour(completeSensorGraph);
@@ -544,7 +567,15 @@ public class RouteBuilder {
 			
 			if (hasLegalNumberOfMoves(orderedDroneLocationTour)) {
 				return orderedDroneLocationTour;
+			} 
+			// over the limit so must remove a droneLocation to visit.
+			// choose the farthest from startEnd location.
+			removeFarthestFromStartEnd(sortedDroneLocationsToVisit);
+			if (!sortedDroneLocationsToVisit.get(0).equals(startEndLocation)) {
+				System.out.println("\n\n start of list is startEnd:  not equals\n\n");
+				break;
 			}
+			
 		
 		} while (!droneLocationsToVisit.isEmpty());
 		

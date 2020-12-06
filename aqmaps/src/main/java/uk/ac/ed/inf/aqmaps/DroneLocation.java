@@ -22,6 +22,14 @@ public class DroneLocation {
 		nearbySensor = null;
 	}
 	
+	public double getLongitude() {
+		return this.lon;
+	}
+	
+	public double getLatitude() {
+		return this.lat;
+	}
+	
 	public int calcAngleTo(DroneLocation adjacentDroneLocation) {
 		
 		double angle = Math.toDegrees(Math.atan2(adjacentDroneLocation.lon - lon, adjacentDroneLocation.lat - lat));
@@ -31,6 +39,15 @@ public class DroneLocation {
 	    }
 	    
 	    return (int) Math.round(angle);
+	}
+	
+	public double calcDistTo(DroneLocation droneLocation) {
+		
+		double distance = Math.sqrt(
+				Math.pow(lon - droneLocation.lon, 2)
+				+ Math.pow(lat - droneLocation.lat, 2)
+				);
+		return distance;
 	}
 	
 	@Override
