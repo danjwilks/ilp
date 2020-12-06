@@ -19,7 +19,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.tour.ChristofidesThreeHalvesApproxMetricTSP;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
-import org.jgrapht.graph.GraphWalk;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 
 public class RouteBuilder {
@@ -28,16 +27,17 @@ public class RouteBuilder {
 	private static final double ULLAT = 55.946233;
 	private static final double LRLON = -3.184319;
 	private static final double LRLAT = 55.942617;
+	private static final int MAX_NUMBER_OF_MOVES = 150;
 	
 	private NoFlyZoneCollection noFlyZoneCollection;
 	private SensorCollection sensorCollection;
 	private DroneLocation startEndLocation;
-	private Polygon flyZone;
 	private Point upperLeftBoundaryPoint;
 	private Point upperRightBoundaryPoint;
 	private Point lowerRightBoundaryPoint;
 	private Point lowerLeftBoundaryPoint;
 	private List<Point> boundaryPointsList;
+	private Polygon flyZone;
 	
 	public RouteBuilder setNoFlyZones(NoFlyZoneCollection noFlyZoneCollection) {
 		this.noFlyZoneCollection = noFlyZoneCollection;
@@ -50,6 +50,21 @@ public class RouteBuilder {
 	public RouteBuilder setStartEndLocation(DroneLocation startEndLocation) {
 		this.startEndLocation = startEndLocation;
 		return this;
+	}
+	
+	private void setFlyZone() {
+		
+		this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON, ULLAT);
+		this.upperRightBoundaryPoint = Point.fromLngLat(LRLON, ULLAT);
+		this.lowerRightBoundaryPoint = Point.fromLngLat(LRLON, LRLAT);
+		this.lowerLeftBoundaryPoint = Point.fromLngLat(ULLON, LRLAT);
+		
+		this.boundaryPointsList = Arrays.asList(
+				upperLeftBoundaryPoint, upperRightBoundaryPoint,
+				lowerRightBoundaryPoint, lowerLeftBoundaryPoint,
+				upperLeftBoundaryPoint);
+		
+		this.flyZone = Polygon.fromLngLats(Arrays.asList(boundaryPointsList));
 	}
 	
  	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
@@ -267,21 +282,6 @@ public class RouteBuilder {
 		return false;
 	}
 	
-	private void setFlyZone() {
-		
-		this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON, ULLAT);
-		this.upperRightBoundaryPoint = Point.fromLngLat(LRLON, ULLAT);
-		this.lowerRightBoundaryPoint = Point.fromLngLat(LRLON, LRLAT);
-		this.lowerLeftBoundaryPoint = Point.fromLngLat(ULLON, LRLAT);
-		
-		this.boundaryPointsList = Arrays.asList(
-				upperLeftBoundaryPoint, upperRightBoundaryPoint,
-				lowerRightBoundaryPoint, lowerLeftBoundaryPoint,
-				upperLeftBoundaryPoint);
-		
-		this.flyZone = Polygon.fromLngLats(Arrays.asList(boundaryPointsList));
-	}
-	
 	private boolean dronePathInsideFlyZone(DronePath dronePath) {
 		
 		var startDroneLocation = dronePath.vertex1;
@@ -396,7 +396,8 @@ public class RouteBuilder {
 		return droneLocationsToVisit;
 	}
 	
-	private Graph<DroneLocation, SensorPath> buildShortestPaths(Graph<DroneLocation, DronePath> triangleGraph, Set<DroneLocation> droneLocationsToVisitSet) {
+	private Graph<DroneLocation, SensorPath> buildShortestPathCompleteSensorGraph(
+			Graph<DroneLocation, DronePath> triangleGraph, Set<DroneLocation> droneLocationsToVisitSet) {
 		
 		var simpleSensorGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
 		
@@ -459,7 +460,7 @@ public class RouteBuilder {
 	
 	private List<DroneLocation> parseDroneLocations(GraphPath<DroneLocation, SensorPath> sensorRoute) {
 		
-		var orderedDroneLocationPath = new ArrayList<DroneLocation>();
+		var orderedDroneLocationTour = new ArrayList<DroneLocation>();
 		var sensorPaths = sensorRoute.getEdgeList();
 		var sensorDroneLocations = sensorRoute.getVertexList();
 
@@ -478,18 +479,20 @@ public class RouteBuilder {
 			
 			for (int droneIndex = 0; droneIndex < dronePaths.size(); droneIndex++) {
 				
-				orderedDroneLocationPath.add(currentDroneLocation);
+				orderedDroneLocationTour.add(currentDroneLocation);
 				var dronePath = dronePaths.get(droneIndex);
 				var nextDroneLocation = dronePath.connectingDroneLocation(currentDroneLocation);
 				currentDroneLocation = nextDroneLocation;
 			}
 			
 		}
-		orderedDroneLocationPath.add(startEndLocation);
+		// start of path should be equal to the end of the part to 
+		// form a closed loop tour.
+		orderedDroneLocationTour.add(orderedDroneLocationTour.get(0));
 		
-		System.out.println("orderedDroneLocationPath vertex list size " + orderedDroneLocationPath.size());
+		System.out.println("orderedDroneLocationPath vertex list size " + orderedDroneLocationTour.size());
 		
-		return orderedDroneLocationPath;
+		return orderedDroneLocationTour;
 		
 	}
 	
@@ -508,23 +511,46 @@ public class RouteBuilder {
 		System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
 	}
 	
+	public boolean hasLegalNumberOfMoves(List<DroneLocation> orderedDroneLocationTour) {
+		if (orderedDroneLocationTour.size() - 1 <= MAX_NUMBER_OF_MOVES) {
+			// the number of moves to traverse orderedDroneLocationTour
+			// is equal to the number of drone locations - 1 since
+			// the start location is repeated at the end of the list
+			// and because the number of edges in a tour is equal to
+			// the number of vertices in the tour.
+			return true;
+		}
+		return false;
+	}
+	
 	public List<DroneLocation> buildBestRoute() {
 		
 		setFlyZone();
 		var triangleGraph = buildTriangleGraph();
 		var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
 		var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
-		var simpleSensorGraph = buildShortestPaths(validDroneLocationsGraph, droneLocationsToVisit);
-		var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
-		var randomStartSensorRoute = christofides.getTour(simpleSensorGraph);
 		
-		printTour(randomStartSensorRoute);
+		do {
+			var completeSensorGraph = buildShortestPathCompleteSensorGraph(validDroneLocationsGraph, 
+					droneLocationsToVisit);
+			
+			var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
+			var sensorTour = christofides.getTour(completeSensorGraph);
+			
+			printTour(sensorTour);
+			
+			System.out.println("chrisofides algo path size: " + sensorTour.getEdgeList().size());
+			var orderedDroneLocationTour = parseDroneLocations(sensorTour);
+			
+			if (hasLegalNumberOfMoves(orderedDroneLocationTour)) {
+				return orderedDroneLocationTour;
+			}
 		
-		System.out.println("chrisofides algo path size: " + randomStartSensorRoute.getEdgeList().size());
-		var orderedDroneLocationPath = parseDroneLocations(randomStartSensorRoute);
-		return orderedDroneLocationPath;
+		} while (!droneLocationsToVisit.isEmpty());
 		
-
+		// not possible to visit any sensors
+		return new ArrayList<>();
+		
 	}
 
 }

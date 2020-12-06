@@ -10,9 +10,11 @@ import java.net.http.HttpResponse.BodyHandlers;
 public class WebClient {
 	
 	private static final HttpClient client = HttpClient.newHttpClient();
-	private static final String BUILDINGSURL = "http://localhost/buildings/no-fly-zones.geojson";
-	private static final String MAPSURL = "http://localhost/maps/";
-	private static final String WHAT3WORDSURL = "http://localhost/words/";
+	private static final String BUILDINGS_URL = "http://localhost/buildings/no-fly-zones.geojson";
+	private static final String MAPS_PREFIX = "http://localhost/maps/";
+	private static final String MAPS_SUFFIX = "/air-quality-data.json";
+	private static final String WHAT3WORDS_PREFIX = "http://localhost/words/";
+	private static final String WHAT3WORDS_SUFFIX = "/details.json";
 	
 	private static String getJsonString(String urlString) {
     	var request = HttpRequest.newBuilder()
@@ -33,11 +35,11 @@ public class WebClient {
 	}
 	
 	public static String getBuildingJsonString() {
-		return getJsonString(BUILDINGSURL);
+		return getJsonString(BUILDINGS_URL);
 	}
 	
 	private static String buildSensorsURL(String day, String month, String year) {
-		return MAPSURL + year + "/" + month + "/" + day + "/air-quality-data.json";
+		return MAPS_PREFIX + year + "/" + month + "/" + day + MAPS_SUFFIX;
 	}
 	
 	public static String getSensorsJsonString(String day, String month, String year) {
@@ -45,7 +47,7 @@ public class WebClient {
 	}
 	
 	private static String buildWhat3WordsURL(String words) {
-		return WHAT3WORDSURL + words + "/details.json";
+		return WHAT3WORDS_PREFIX + words + WHAT3WORDS_SUFFIX;
 	}
 	
 	public static String getWhat3WordsJsonString(String words) {

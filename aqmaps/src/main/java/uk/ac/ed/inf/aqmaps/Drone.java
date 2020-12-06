@@ -9,7 +9,7 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 
 public class Drone {
-//	TODO plot sensors not visited
+//	TODO plot sensors not visited 
 	Set<Sensor> visitedSensors;
 	DroneLocation startEndLocation;
 	String outputFile;

@@ -3,14 +3,6 @@ package uk.ac.ed.inf.aqmaps;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.lang.reflect.Type;
-
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Polygon;
 
 public class App {
 	
@@ -23,15 +15,13 @@ public class App {
 		int day = -1;
 		int month = -1;
 		int year = -1;
-		int randomSeed = -1;
-		int portNumber = -1;
 		
 		try{
 			day = Integer.parseInt(args[0]);
 			month = Integer.parseInt(args[1]);
 			year = Integer.parseInt(args[2]);
-			randomSeed = Integer.parseInt(args[5]);
-			portNumber = Integer.parseInt(args[6]);
+			Integer.parseInt(args[5]); // randomSeed
+			Integer.parseInt(args[6]); // portNumber
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("Day, month, year, random seed and port number should be integer values.");
 		}
@@ -83,24 +73,6 @@ public class App {
 		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
 		return what3Words;
 		
-	}
-	
-	public static List<Sensor> buildSensors(String sensorsJSONString) {
-		
-		if (sensorsJSONString.equals("")) {
-			return new ArrayList<>();
-		}
-		
-		Type listType = new TypeToken<ArrayList<Sensor>>() {}.getType();
-    	List<Sensor> sensors = new Gson().fromJson(sensorsJSONString, listType);
-    	
-    	for (var sensor : sensors) {
-    		What3Words what3Words = getThreeWordLocation(sensor);
-    		sensor.setLongitude(what3Words.coordinates.lng);
-    		sensor.setLatitude(what3Words.coordinates.lat);
-    	}
-    	
-    	return sensors;
 	}
 
 	public static void main( String[] args ) throws IOException, InterruptedException {

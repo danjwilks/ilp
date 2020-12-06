@@ -1,8 +1,8 @@
 package uk.ac.ed.inf.aqmaps;
 
 /**
- * The hex values of colours that are used in the 
- * heatmap. 
+ * The hex values of colours that are used for 
+ * sensor readings.
  */
 
 public final class Colours {

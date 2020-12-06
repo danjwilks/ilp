@@ -5,6 +5,9 @@ import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 
 public class SensorReader {
 	
+	private static final double MAX_BATTERY = 100.0;
+	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
+	
 	public SensorReading read(Sensor sensor) {
 		
 		var location = readWhat3Words(sensor);
@@ -39,8 +42,7 @@ public class SensorReader {
 	
 	public String readMarkerSymbol(Sensor sensor) {
 		String markerSymbol = "";
-		double tenPercent = 10.0;
-		if (sensor.battery < tenPercent) {
+		if (sensor.battery < TEN_PERCENT_BATTERY) {
 			return CROSS;
 		}
 		double polutionLevel;
