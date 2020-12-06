@@ -37,16 +37,17 @@ public class Drone {
 			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
 			var nextDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex + 1);
 			
-			if (currentDroneLocation.isStart) { // delete later
-				var point = Point.fromLngLat(currentDroneLocation.lon, currentDroneLocation.lat); 
+			if (currentDroneLocation.getIsStart()) { // delete later
+				var point = Point.fromLngLat(currentDroneLocation.getLongitude(), 
+						currentDroneLocation.getLatitude()); 
 				var feature = Feature.fromGeometry(point);
 				droneRecords.features.add(feature);
 			}
 			
 			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
 			currentDroneLocation = nextDroneLocation;
-			if (currentDroneLocation.isNearSensor) {
-				recordSensorDetails(currentDroneLocation.nearbySensor);
+			if (currentDroneLocation.getIsNearSensor()) {
+				recordSensorDetails(currentDroneLocation.getNearbySensor());
 			}
 		}
 		

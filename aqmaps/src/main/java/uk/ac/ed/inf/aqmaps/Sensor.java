@@ -20,8 +20,7 @@ public class Sensor {
 	public void setLatitude(double lat) {
 		this.latitude = lat;
 	}
-	
-	
+		
 	public double getLongitude() {
 		return longitude;
 	}

@@ -1,23 +1,20 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.util.UUID;
 import com.mapbox.geojson.Point;
 
 public class DroneLocation {
 	
-	public double lon;
-	public double lat;
-	public Point point;
-	public String id;
-	public boolean isNearSensor;
-	public Sensor nearbySensor;
-	public boolean isStart = false;
+	private double lon;
+	private double lat;
+	private Point point;
+	private boolean isNearSensor;
+	private Sensor nearbySensor;
+	private boolean isStart = false;
 	
 	public DroneLocation(double lon, double lat) {
 		this.lon = lon;
 		this.lat = lat;
 		this.point = Point.fromLngLat(lon, lat);
-		this.id = UUID.randomUUID().toString();
 		isNearSensor = false;
 		nearbySensor = null;
 	}
@@ -82,6 +79,37 @@ public class DroneLocation {
 	@Override
 	public String toString() {
 		return "(" + lon + "," + lat + ")";
+	}
+
+	
+	public boolean getIsStart() {
+		return isStart;
+	}
+
+	public boolean getIsNearSensor() {
+		return isNearSensor;
+	}
+
+	
+	public Sensor getNearbySensor() {
+		return nearbySensor;
+	}
+
+	public Point getPoint() {
+		return point;
+	}
+
+	public void setIsNearSensor(boolean isNearSensor) {
+		this.isNearSensor = isNearSensor;
+	}
+
+	public void setNearbySensor(Sensor nearbySensor) {
+		this.nearbySensor = nearbySensor;
+	}
+
+	public void setIsStart(boolean isStart) {
+//		 TODO delete this before submission
+		this.isStart = isStart;
 	}
 
 }

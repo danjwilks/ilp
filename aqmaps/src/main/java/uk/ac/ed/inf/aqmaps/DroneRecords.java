@@ -22,8 +22,8 @@ public class DroneRecords {
 	}
 	
 	public Feature buildPathFeature(DroneLocation source, DroneLocation sink) {
-		var sourcePoint = Point.fromLngLat(source.lon, source.lat);
-		var sinkPoint = Point.fromLngLat(sink.lon, sink.lat);
+		var sourcePoint = Point.fromLngLat(source.getLongitude(), source.getLatitude());
+		var sinkPoint = Point.fromLngLat(sink.getLongitude(), sink.getLatitude());
 		var pathpoints = Arrays.asList(sourcePoint, sinkPoint);
 		var lineString = LineString.fromLngLats(pathpoints);
 		var feature = Feature.fromGeometry(lineString);
@@ -35,18 +35,18 @@ public class DroneRecords {
 		String textFileLine = "";
 		
 		String nearBySensorLocation = "null";
-		if (sink.isNearSensor) { 
-			nearBySensorLocation = sink.nearbySensor.location;
+		if (sink.getIsNearSensor()) { 
+			nearBySensorLocation = sink.getNearbySensor().location;
 		}
 		
 		var directionDegree = source.calcAngleTo(sink);
 		
-		textFileLine += lineCount                       + ",";
-		textFileLine += String.valueOf(source.lon)      + ",";
-		textFileLine += String.valueOf(source.lat)      + ",";
-		textFileLine += String.valueOf(directionDegree) + ",";
-		textFileLine += String.valueOf(sink.lon)        + ",";
-		textFileLine += String.valueOf(sink.lat)        + ",";  
+		textFileLine += lineCount                             + ",";
+		textFileLine += String.valueOf(source.getLongitude()) + ",";
+		textFileLine += String.valueOf(source.getLatitude())  + ",";
+		textFileLine += String.valueOf(directionDegree)       + ",";
+		textFileLine += String.valueOf(sink.getLongitude())   + ",";
+		textFileLine += String.valueOf(sink.getLatitude())    + ",";  
 		textFileLine += nearBySensorLocation;
 		
 		return textFileLine;

@@ -6,7 +6,7 @@ import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 public class SensorReader {
 	
 	private static final double MAX_BATTERY = 100.0;
-	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
+	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;// wrong
 	
 	public SensorInformation getUnvisitedInfo(Sensor sensor) {
 		

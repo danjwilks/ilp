@@ -2,8 +2,8 @@ package uk.ac.ed.inf.aqmaps;
 
 public class DronePath {
 	
-	DroneLocation vertex1;
-	DroneLocation vertex2;
+	private DroneLocation vertex1;
+	private DroneLocation vertex2;
 	
 	public DronePath(DroneLocation vertex1, DroneLocation vertex2) {
 		this.vertex1 = vertex1;
@@ -42,6 +42,15 @@ public class DronePath {
 		DronePath edge = (DronePath) obj;
 		return vertex1.equals(edge.vertex1) && vertex2.equals(edge.vertex2)
 				|| vertex2.equals(edge.vertex1) && vertex1.equals(edge.vertex2);
+	}
+
+	
+	public DroneLocation getVertex1() {
+		return vertex1;
+	}
+	
+	public DroneLocation getVertex2() {
+		return vertex2;
 	}
 
 }

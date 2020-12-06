@@ -10,7 +10,8 @@ import java.net.http.HttpResponse.BodyHandlers;
 public class WebClient {
 	
 	private static final HttpClient client = HttpClient.newHttpClient();
-	private static final String BUILDINGS_URL = "http://localhost/buildings/no-fly-zones.geojson";
+//	TODO port number
+	private static final String BUILDINGS_URL = "http://localhost:/buildings/no-fly-zones.geojson";
 	private static final String MAPS_PREFIX = "http://localhost/maps/";
 	private static final String MAPS_SUFFIX = "/air-quality-data.json";
 	private static final String WHAT3WORDS_PREFIX = "http://localhost/words/";

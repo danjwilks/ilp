@@ -46,7 +46,7 @@ public class Route {
 			private static final double ULLAT = 55.946233;
 			private static final double LRLON = -3.184319;
 			private static final double LRLAT = 55.942617;
-			private static final int MAX_NUMBER_OF_MOVES = 60;
+			private static final int MAX_NUMBER_OF_MOVES = 150;
 			private static final double MAX_DIST_TO_SENSOR = 0.0002;
 			
 			private NoFlyZoneCollection noFlyZoneCollection;
@@ -97,13 +97,13 @@ public class Route {
 				
 				ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 				
-				double upperLeftLonStart = startEndLocation.lon;
+				double upperLeftLonStart = startEndLocation.getLongitude();
 				int numberOfRowsToLeft = 0;
 				while (upperLeftLonStart > ULLON) {
 					numberOfRowsToLeft++;
 					upperLeftLonStart -= 0.0003;
 				}
-				double upperLeftLatStart = startEndLocation.lat;
+				double upperLeftLatStart = startEndLocation.getLatitude();
 				while (upperLeftLatStart < ULLAT) {
 					upperLeftLatStart += 0.0003;
 				}
@@ -210,15 +210,17 @@ public class Route {
 				for (var path : allPaths) {
 					
 					var dist = Math.sqrt(
-							Math.pow(path.vertex1.lon - path.vertex2.lon, 2)
-							+ Math.pow(path.vertex1.lat - path.vertex2.lat, 2)
+							Math.pow(path.getVertex1().getLongitude() 
+									- path.getVertex2().getLongitude(), 2)
+							+ Math.pow(path.getVertex1().getLatitude()
+									- path.getVertex2().getLatitude(), 2)
 							);
 					if (dist < 0.00029 || dist > 0.00031) {
 						System.out.println("error, triangle dist is wrong");
 					}
 					
-					var line = LineString.fromLngLats(Arrays.asList(path.vertex1.point,
-							path.vertex2.point));
+					var line = LineString.fromLngLats(Arrays.asList(path.getVertex1().getPoint(),
+							path.getVertex2().getPoint()));
 					fToPrint.add(Feature.fromGeometry(line));
 					
 				}
@@ -240,7 +242,7 @@ public class Route {
 				}
 				
 				for (var dronePath : triangleGridDronePaths) {
-					graph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
+					graph.addEdge(dronePath.getVertex1(), dronePath.getVertex2(), dronePath);
 					graph.setEdgeWeight(dronePath, 1);
 				}
 				
@@ -250,7 +252,7 @@ public class Route {
 			
 			private boolean locationOverBuildings(DroneLocation droneLocation) {
 				
-				var dronePoint = droneLocation.point;
+				var dronePoint = droneLocation.getPoint();
 				
 				for (var noFlyZone : noFlyZoneCollection.getNoFlyZones()) {
 					if (TurfJoins.inside(dronePoint, noFlyZone)) {
@@ -274,8 +276,8 @@ public class Route {
 			
 			private boolean dronePathIsOverBuildings(DronePath dronePath) {
 				
-				var startDroneLocation = dronePath.vertex1;
-				var endDroneLocation = dronePath.vertex2;
+				var startDroneLocation = dronePath.getVertex1();
+				var endDroneLocation = dronePath.getVertex2();
 				
 				for (var building : noFlyZoneCollection.getNoFlyZones()) {
 					
@@ -288,7 +290,7 @@ public class Route {
 						var buildingEdgeStartPoint = buildingPoints.get(startPointIndex);
 						var buildingEdgeEndPoint = buildingPoints.get(startPointIndex + 1);
 						
-						if (linesIntersect(startDroneLocation.point, endDroneLocation.point, buildingEdgeStartPoint, buildingEdgeEndPoint)) {
+						if (linesIntersect(startDroneLocation.getPoint(), endDroneLocation.getPoint(), buildingEdgeStartPoint, buildingEdgeEndPoint)) {
 							return true;
 						}
 					}
@@ -299,7 +301,7 @@ public class Route {
 			
 			private boolean locationInsideFlyZone(DroneLocation droneLocation) {
 				
-				var dronePoint = droneLocation.point;
+				var dronePoint = droneLocation.getPoint();
 				
 				if (TurfJoins.inside(dronePoint, flyZone)) {
 					return true;
@@ -310,8 +312,8 @@ public class Route {
 			
 			private boolean dronePathInsideFlyZone(DronePath dronePath) {
 				
-				var startDroneLocation = dronePath.vertex1;
-				var endDroneLocation = dronePath.vertex2;
+				var startDroneLocation = dronePath.getVertex1();
+				var endDroneLocation = dronePath.getVertex2();
 				
 				if (!locationInsideFlyZone(startDroneLocation) 
 						|| !locationInsideFlyZone(endDroneLocation)) {
@@ -322,7 +324,7 @@ public class Route {
 					var boundaryStartPoint = boundaryPointsList.get(startPointIndex);
 					var boundaryEndPoint = boundaryPointsList.get(startPointIndex + 1);
 					
-					if (linesIntersect(startDroneLocation.point, endDroneLocation.point, boundaryStartPoint, boundaryEndPoint)) {
+					if (linesIntersect(startDroneLocation.getPoint(), endDroneLocation.getPoint(), boundaryStartPoint, boundaryEndPoint)) {
 						return false;
 					}
 					
@@ -364,7 +366,7 @@ public class Route {
 				
 				for (var dronePath : dronePaths) {
 					if (isValidDronePath(dronePath)) {
-						validDroneLocationsGraph.addEdge(dronePath.vertex1, dronePath.vertex2, dronePath);
+						validDroneLocationsGraph.addEdge(dronePath.getVertex1(), dronePath.getVertex2(), dronePath);
 						validDroneLocationsGraph.setEdgeWeight(dronePath, 1);
 					}
 				}
@@ -380,7 +382,7 @@ public class Route {
 				
 				double distance = calcDist(
 						sensor.getLongitude(), sensor.getLatitude(),
-						droneLocation.lon, droneLocation.lat
+						droneLocation.getLongitude(), droneLocation.getLatitude()
 						);
 				
 				return distance <= MAX_DIST_TO_SENSOR;
@@ -389,8 +391,8 @@ public class Route {
 			
 			public boolean isStartEndLocation(DroneLocation droneLocation) {
 				
-				double lonDiff = Math.abs(droneLocation.lon - startEndLocation.lon);
-				double latDiff = Math.abs(droneLocation.lat - startEndLocation.lat);
+				double lonDiff = Math.abs(droneLocation.getLongitude() - startEndLocation.getLongitude());
+				double latDiff = Math.abs(droneLocation.getLatitude() - startEndLocation.getLatitude());
 				
 				if (lonDiff < 0.0001 && latDiff < 0.0001) {
 					return true;
@@ -407,8 +409,8 @@ public class Route {
 					for (var droneLocation : triangleGraph.vertexSet()) {
 						if (sensorIsWithinDistance(sensor, droneLocation)) {
 							droneLocationsToVisit.add(droneLocation);
-							droneLocation.isNearSensor = true;
-							droneLocation.nearbySensor = sensor;
+							droneLocation.setIsNearSensor(true);
+							droneLocation.setNearbySensor(sensor);
 							break;
 						}
 					}
@@ -416,7 +418,7 @@ public class Route {
 				
 				for (var droneLocation : triangleGraph.vertexSet()) {
 					if (isStartEndLocation(droneLocation)) {
-						droneLocation.isStart = true;
+						droneLocation.setIsStart(true);
 						droneLocationsToVisit.add(droneLocation);
 						break;
 					}
@@ -527,11 +529,11 @@ public class Route {
 				
 				var fs = new ArrayList<Feature>(); 
 				for (var n : sensorRoute.getVertexList()) {
-					fs.add(Feature.fromGeometry(n.point));
+					fs.add(Feature.fromGeometry(n.getPoint()));
 				}
 				for (var e : sensorRoute.getEdgeList()) {
 					for (var ps : e.vertex1ToVertex2) {
-						var line = LineString.fromLngLats(Arrays.asList(ps.vertex1.point, ps.vertex2.point));
+						var line = LineString.fromLngLats(Arrays.asList(ps.getVertex1().getPoint(), ps.getVertex2().getPoint()));
 						fs.add(Feature.fromGeometry(line));
 					}
 				}
@@ -552,7 +554,7 @@ public class Route {
 			
 			private void removeFarthestFromStartEnd(List<DroneLocation> sortedDroneLocationsToVisit) {
 				var droneLocation = sortedDroneLocationsToVisit.remove(sortedDroneLocationsToVisit.size() -1);
-				unvisitedSensors.add(droneLocation.nearbySensor);
+				unvisitedSensors.add(droneLocation.getNearbySensor());
 				
 			}
 			

@@ -39,7 +39,7 @@ public class App {
 		
 	}
 	
-	public static boolean dateIsValid(int day, int month, int year) {
+	private static boolean dateIsValid(int day, int month, int year) {
 		
 	    boolean dateIsValid = true;
 	    try {
@@ -50,13 +50,13 @@ public class App {
 	    return dateIsValid;
 	}
 	
-	public static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
+	private static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
 		String noFlyZoneJsonString = WebClient.getBuildingJsonString();
 		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
 		return noFlyZoneCollection;
 	}
 	
-	public static SensorCollection getSensorCollection(String day, String month, String year) {
+	private static SensorCollection getSensorCollection(String day, String month, String year) {
 		var sensorJsonString = WebClient.getSensorsJsonString(day, month, year);
     	var sensorCollection = SensorCollection.fromJsonString(sensorJsonString);
     	for (var sensor : sensorCollection.getSensors()) {
@@ -67,7 +67,7 @@ public class App {
     	return sensorCollection;
 	}
 	
-	public static What3Words getThreeWordLocation(Sensor sensor) {
+	private static What3Words getThreeWordLocation(Sensor sensor) {
 		String words = sensor.location.replaceAll("\\.", "/");
 		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
 		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
