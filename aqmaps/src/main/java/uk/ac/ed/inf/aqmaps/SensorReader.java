@@ -6,7 +6,7 @@ import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 public class SensorReader {
 	
 	private static final double MAX_BATTERY = 100.0;
-	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;// wrong
+	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
 	
 	public SensorInformation getUnvisitedInfo(Sensor sensor) {
 		
@@ -42,19 +42,19 @@ public class SensorReader {
 		
 	}
 	
-	public String readWhat3Words(Sensor sensor) {
+	private String readWhat3Words(Sensor sensor) {
 		return sensor.getLocation();
 	}
 	
-	public String readFeatureRgbString(Sensor sensor) {
+	private String readFeatureRgbString(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
-	public String readMarkerColor(Sensor sensor) {
+	private String readMarkerColor(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
-	public String readMarkerSymbol(Sensor sensor) {
+	private String readMarkerSymbol(Sensor sensor) {
 		String markerSymbol = "";
 		if (sensor.getBattery() < TEN_PERCENT_BATTERY) {
 			return CROSS;
@@ -76,7 +76,7 @@ public class SensorReader {
 		return markerSymbol;
 	}
 	
-	public String determineHexString(Sensor sensor) {
+	private String determineHexString(Sensor sensor) {
 		
 		String hexString = "";
 		double tenPercent = 10.0;

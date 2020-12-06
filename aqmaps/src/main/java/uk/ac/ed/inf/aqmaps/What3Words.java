@@ -4,11 +4,20 @@ import com.google.gson.Gson;
 
 public class What3Words {
 	
-	String words;
-	Coordinates coordinates;
+	private String words;
+	private Coordinates coordinates;
 	public static class Coordinates {
+		
 		double lng;
 		double lat;
+		
+		public double getLongitude() {
+			return this.lng;
+		}
+		
+		public double getLatitude() {
+			return this.lat;
+		}
 	}
 	
 	public static What3Words fromJsonString(String what3WordsJsonString) {
@@ -29,6 +38,11 @@ public class What3Words {
 
 		What3Words what3Words = (What3Words) obj;
 		return words.equals(what3Words.words);
+	}
+
+	
+	public Coordinates getCoordinates() {
+		return this.coordinates;
 	}
 	
 }

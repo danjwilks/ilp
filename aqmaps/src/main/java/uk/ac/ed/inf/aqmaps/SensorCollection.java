@@ -19,12 +19,12 @@ public class SensorCollection {
 		this.sensors = new ArrayList<>();
 	}
 	
-	public List<Sensor> getSensors() {
-		return sensors;
-	}
-	
 	public void add(Sensor sensor) {
 		this.sensors.add(sensor);
+	}
+	
+	public List<Sensor> getSensors() {
+		return sensors;
 	}
 	
 	public static SensorCollection fromJsonString(String jsonString) {

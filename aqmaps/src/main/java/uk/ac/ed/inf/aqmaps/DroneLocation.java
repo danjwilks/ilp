@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.math.BigDecimal;
+
 import com.mapbox.geojson.Point;
 
 public class DroneLocation {
@@ -12,11 +14,15 @@ public class DroneLocation {
 	private boolean isStart = false;
 	
 	public DroneLocation(double lon, double lat) {
-		this.lon = lon;
+		this.lon = lon;;
 		this.lat = lat;
-		this.point = Point.fromLngLat(lon, lat);
+		this.point = Point.fromLngLat(this.lon, this.lat);
 		isNearSensor = false;
 		nearbySensor = null;
+	}
+	
+	public DroneLocation(BigDecimal lon, BigDecimal lat) {
+		this(lon.doubleValue(), lat.doubleValue());
 	}
 	
 	public int calcAngleTo(DroneLocation adjacentDroneLocation) {

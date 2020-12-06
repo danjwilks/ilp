@@ -27,7 +27,7 @@ public class Drone {
 		recordDronePath(source, sink);
 	}
 
-	public void traverse(Route bestRoute) {
+	public void traverse(ChristofidesRoute bestRoute) {
 		
 		recordUnvisitedSensors(bestRoute.getUnvisitedSensors());
 		

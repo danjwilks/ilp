@@ -64,8 +64,8 @@ public class App {
     	var sensorCollection = SensorCollection.fromJsonString(sensorJsonString);
     	for (var sensor : sensorCollection.getSensors()) {
     		What3Words what3Words = getThreeWordLocation(sensor);
-    		sensor.setLongitude(what3Words.coordinates.lng);
-    		sensor.setLatitude(what3Words.coordinates.lat);
+    		sensor.setLongitude(what3Words.getCoordinates().getLongitude());
+    		sensor.setLatitude(what3Words.getCoordinates().getLatitude());
     	}
     	return sensorCollection;
 	}
@@ -96,7 +96,7 @@ public class App {
     	
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
-    	var bestRoute = new Route.RouteBuilder()
+    	var bestRoute = new ChristofidesRoute.RouteBuilder()
     			.setNoFlyZones(noFlyZones)
     			.setAvailableSensors(sensors)
     			.setStartEndLocation(startLocation)

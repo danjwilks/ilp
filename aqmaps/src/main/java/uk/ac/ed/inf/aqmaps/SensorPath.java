@@ -5,12 +5,11 @@ import java.util.List;
 
 public class SensorPath {
 	
-	List<DroneLocation> locations;
-	List<DronePath> vertex1ToVertex2;
-	List<DronePath> vertex2ToVertex1;
-	int weight;
-	DroneLocation vertex1;
-	DroneLocation vertex2;
+	private List<DroneLocation> locations;
+	private List<DronePath> vertex1ToVertex2;
+	private List<DronePath> vertex2ToVertex1;
+	private int weight;
+	private DroneLocation vertex1;
 	
 	
 	SensorPath(List<DroneLocation> locations, List<DronePath> paths, DroneLocation vertex1, DroneLocation vertex2) {
@@ -19,7 +18,6 @@ public class SensorPath {
 		this.vertex2ToVertex1 = reverse(paths);
 		this.weight = paths.size();
 		this.vertex1 = vertex1;
-		this.vertex2 = vertex2;
 	}
 	
 	private List<DronePath> reverse(List<DronePath> edges) {
@@ -59,6 +57,14 @@ public class SensorPath {
 
 		SensorPath sensorPath = (SensorPath) obj;
 		return locations.equals(sensorPath.locations);
+	}
+
+	public double getWeight() {
+		return this.weight;
+	}
+
+	public List<DronePath> getVertex1ToVertex2() {
+		return this.vertex1ToVertex2;
 	}
 
 }

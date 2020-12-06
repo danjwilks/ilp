@@ -35,16 +35,8 @@ public class WebClient {
 		return "";
 	}
 	
-	public static String getBuildingJsonString() {
-		return getJsonString(BUILDINGS_URL);
-	}
-	
 	private static String buildSensorsURL(String day, String month, String year) {
 		return MAPS_PREFIX + year + "/" + month + "/" + day + MAPS_SUFFIX;
-	}
-	
-	public static String getSensorsJsonString(String day, String month, String year) {
-		return getJsonString(buildSensorsURL(day, month, year));
 	}
 	
 	private static String buildWhat3WordsURL(String words) {
@@ -54,5 +46,12 @@ public class WebClient {
 	public static String getWhat3WordsJsonString(String words) {
 		return getJsonString(buildWhat3WordsURL(words));
 	}
-
+	
+	public static String getSensorsJsonString(String day, String month, String year) {
+		return getJsonString(buildSensorsURL(day, month, year));
+	}
+	
+	public static String getBuildingJsonString() {
+		return getJsonString(BUILDINGS_URL);
+	}
 }
