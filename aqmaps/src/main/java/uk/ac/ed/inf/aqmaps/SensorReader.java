@@ -43,7 +43,7 @@ public class SensorReader {
 	}
 	
 	public String readWhat3Words(Sensor sensor) {
-		return sensor.location;
+		return sensor.getLocation();
 	}
 	
 	public String readFeatureRgbString(Sensor sensor) {
@@ -56,12 +56,12 @@ public class SensorReader {
 	
 	public String readMarkerSymbol(Sensor sensor) {
 		String markerSymbol = "";
-		if (sensor.battery < TEN_PERCENT_BATTERY) {
+		if (sensor.getBattery() < TEN_PERCENT_BATTERY) {
 			return CROSS;
 		}
 		double polutionLevel;
 		try {
-			polutionLevel = Double.parseDouble(sensor.reading);
+			polutionLevel = Double.parseDouble(sensor.getReading());
 		} catch (NumberFormatException e) {
 			return CROSS;
 		} catch (NullPointerException e) {
@@ -80,10 +80,10 @@ public class SensorReader {
 		
 		String hexString = "";
 		double tenPercent = 10.0;
-		if (sensor.battery < tenPercent) {
+		if (sensor.getBattery() < tenPercent) {
 			return BLACK;
 		}
-		double polutionLevel = Double.parseDouble(sensor.reading);
+		double polutionLevel = Double.parseDouble(sensor.getReading());
 		
 		if (0 <= polutionLevel && polutionLevel < 32) {
 			hexString = GREEN;

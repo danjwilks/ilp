@@ -21,7 +21,7 @@ public class DroneRecords {
 		this.flightPathTextFile = new ArrayList<>();
 	}
 	
-	public Feature buildPathFeature(DroneLocation source, DroneLocation sink) {
+	private Feature buildPathFeature(DroneLocation source, DroneLocation sink) {
 		var sourcePoint = Point.fromLngLat(source.getLongitude(), source.getLatitude());
 		var sinkPoint = Point.fromLngLat(sink.getLongitude(), sink.getLatitude());
 		var pathpoints = Arrays.asList(sourcePoint, sinkPoint);
@@ -30,13 +30,13 @@ public class DroneRecords {
 		return feature;
 	}
 	
-	public String buildTextFileLine(DroneLocation source, DroneLocation sink) {
+	private String buildTextFileLine(DroneLocation source, DroneLocation sink) {
 		
 		String textFileLine = "";
 		
 		String nearBySensorLocation = "null";
 		if (sink.getIsNearSensor()) { 
-			nearBySensorLocation = sink.getNearbySensor().location;
+			nearBySensorLocation = sink.getNearbySensor().getLocation();
 		}
 		
 		var directionDegree = source.calcAngleTo(sink);
@@ -84,7 +84,6 @@ public class DroneRecords {
 		features.add(sensorFeature);
 	}
 
-	
 	public List<Feature> getFeatures() {
 		return this.features;
 	}

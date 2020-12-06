@@ -71,7 +71,7 @@ public class App {
 	}
 	
 	private static What3Words getThreeWordLocation(Sensor sensor) {
-		String words = sensor.location.replaceAll("\\.", "/");
+		String words = sensor.getLocation().replaceAll("\\.", "/");
 		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
 		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
 		return what3Words;

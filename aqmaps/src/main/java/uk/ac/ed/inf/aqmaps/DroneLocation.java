@@ -19,14 +19,6 @@ public class DroneLocation {
 		nearbySensor = null;
 	}
 	
-	public double getLongitude() {
-		return this.lon;
-	}
-	
-	public double getLatitude() {
-		return this.lat;
-	}
-	
 	public int calcAngleTo(DroneLocation adjacentDroneLocation) {
 		
 		double angle = Math.toDegrees(Math.atan2(adjacentDroneLocation.lon - lon, adjacentDroneLocation.lat - lat));
@@ -46,7 +38,7 @@ public class DroneLocation {
 				);
 		return distance;
 	}
-	
+		
 	@Override
 	public int hashCode() {
 		return point.hashCode();
@@ -80,7 +72,14 @@ public class DroneLocation {
 	public String toString() {
 		return "(" + lon + "," + lat + ")";
 	}
-
+	
+	public double getLongitude() {
+		return this.lon;
+	}
+	
+	public double getLatitude() {
+		return this.lat;
+	}
 	
 	public boolean getIsStart() {
 		return isStart;
@@ -90,7 +89,6 @@ public class DroneLocation {
 		return isNearSensor;
 	}
 
-	
 	public Sensor getNearbySensor() {
 		return nearbySensor;
 	}

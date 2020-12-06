@@ -93,7 +93,7 @@ public class Route {
 				this.flyZone = Polygon.fromLngLats(Arrays.asList(boundaryPointsList));
 			}
 			
-			public boolean isFirstRowShifted() {
+			private boolean isFirstRowShifted() {
 				double upperLeftLatStart = startEndLocation.getLatitude();
 				int numberOfRowsToTop = 0;
 				while (upperLeftLatStart < ULLAT) {
@@ -110,7 +110,7 @@ public class Route {
 				return isShiftedRow;
 			}
 			
-		 	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
+		 	private List<List<DroneLocation>> buildTriangleGridDroneLocations() {
 				
 				ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 				
@@ -166,7 +166,7 @@ public class Route {
 //		 		return num;
 		 	}
 			
-			public HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
+			private HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 				
 				var allPaths = new HashSet<DronePath>();
 				
@@ -263,7 +263,7 @@ public class Route {
 				
 			}
 			
-			public Graph<DroneLocation, DronePath> buildTriangleGraph() {
+			private Graph<DroneLocation, DronePath> buildTriangleGraph() {
 				
 				var graph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
 				
@@ -408,11 +408,11 @@ public class Route {
 				return validDroneLocationsGraph;
 			}
 			
-			public double calcDist(double lon1, double lat1, double lon2, double lat2) {
+			private double calcDist(double lon1, double lat1, double lon2, double lat2) {
 				return Math.sqrt(Math.pow(lon1 - lon2, 2) + Math.pow(lat1 - lat2, 2));
 			}
 			
-			public boolean sensorIsWithinDistance(Sensor sensor, DroneLocation droneLocation) {
+			private boolean sensorIsWithinDistance(Sensor sensor, DroneLocation droneLocation) {
 				
 				double distance = calcDist(
 						sensor.getLongitude(), sensor.getLatitude(),
@@ -423,7 +423,7 @@ public class Route {
 				
 			}
 			
-			public boolean isStartEndLocation(DroneLocation droneLocation) {
+			private boolean isStartEndLocation(DroneLocation droneLocation) {
 				
 				double lonDiff = Math.abs(droneLocation.getLongitude() - startEndLocation.getLongitude());
 				double latDiff = Math.abs(droneLocation.getLatitude() - startEndLocation.getLatitude());
@@ -435,7 +435,7 @@ public class Route {
 				
 			}
 			
-			public Set<DroneLocation> findDroneLocationsToVisit(Graph<DroneLocation, DronePath> triangleGraph) {
+			private Set<DroneLocation> findDroneLocationsToVisit(Graph<DroneLocation, DronePath> triangleGraph) {
 				
 				var droneLocationsToVisit = new HashSet<DroneLocation>();
 				
@@ -559,7 +559,7 @@ public class Route {
 				
 			}
 			
-			public void printTour(GraphPath<DroneLocation, SensorPath> sensorRoute) {
+			private void printTour(GraphPath<DroneLocation, SensorPath> sensorRoute) {
 				
 				var fs = new ArrayList<Feature>(); 
 				for (var n : sensorRoute.getVertexList()) {
@@ -574,7 +574,7 @@ public class Route {
 				System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
 			}
 			
-			public boolean hasLegalNumberOfMoves(List<DroneLocation> orderedDroneLocationTour) {
+			private boolean hasLegalNumberOfMoves(List<DroneLocation> orderedDroneLocationTour) {
 				if (orderedDroneLocationTour.size() - 1 <= MAX_NUMBER_OF_MOVES) {
 					// the number of moves to traverse orderedDroneLocationTour
 					// is equal to the number of drone locations - 1 since
@@ -604,7 +604,7 @@ public class Route {
 				 return droneLocationsToVisitList;
 			}
 			
-			void printGraph(Graph<DroneLocation, DronePath> graph) {
+			private void printGraph(Graph<DroneLocation, DronePath> graph) {
 				var fs = new ArrayList<Feature>(); 
 				for (var n : graph.vertexSet()) {
 					fs.add(Feature.fromGeometry(n.getPoint()));

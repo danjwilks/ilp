@@ -44,7 +44,6 @@ public class DronePath {
 				|| vertex2.equals(edge.vertex1) && vertex1.equals(edge.vertex2);
 	}
 
-	
 	public DroneLocation getVertex1() {
 		return this.vertex1;
 	}
