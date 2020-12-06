@@ -1,39 +1,29 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 
 public class Drone {
-//	TODO plot sensors not visited 
-	Set<Sensor> visitedSensors;
-	DroneLocation startEndLocation;
-	String outputFile;
-	SensorReader sensorReader;
-	DroneRecords droneRecords;
+	
+	private SensorReader sensorReader;
+	private DroneRecords droneRecords;
 	
 	public Drone(DroneLocation startEndLocation, String date) {
-		this.visitedSensors = new HashSet<>();
-		this.startEndLocation = startEndLocation;
-		this.outputFile = "flightpath-" + date + ".txt";
 		this.sensorReader = new SensorReader();
 		this.droneRecords = new DroneRecords(date);
 	}
 	
-	public void recordSensorDetails(Sensor sensor) {
+	private void recordSensorDetails(Sensor sensor) {
 		var sensorInformation = sensorReader.read(sensor);
 		droneRecords.addSensorInformation(sensorInformation);
 	}
 	
-	public void recordDronePath(DroneLocation source, DroneLocation sink) {
+	private void recordDronePath(DroneLocation source, DroneLocation sink) {
 		droneRecords.addPath(source, sink);
 	}
 
-	public void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
+	private void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
 		recordDronePath(source, sink);
 	}
 
@@ -71,6 +61,10 @@ public class Drone {
 			droneRecords.addSensorInformation(sensorReader.getUnvisitedInfo(sensor));
 		}
 		
+	}
+
+	public DroneRecords getDroneRecords() {
+		return droneRecords;
 	}
 
 }

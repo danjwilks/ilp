@@ -102,7 +102,7 @@ public class App {
     	var drone = new Drone(startLocation, date);
     	drone.traverse(bestRoute);
     	
-    	FileHandler.writeToFile(drone.droneRecords);
+    	FileHandler.writeToFile(drone.getDroneRecords());
     	
     }
 }
