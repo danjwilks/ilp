@@ -10,10 +10,10 @@ import com.mapbox.geojson.Point;
 
 public class DroneRecords {
 	
-	String date;
-	List<Feature> features;
-	List<String> flightPathTextFile;
-	int lineCount = 0;
+	private String date;
+	private List<Feature> features;
+	private List<String> flightPathTextFile;
+	private int lineCount = 0;
 	
 	public DroneRecords(String date) {
 		this.date = date;
@@ -84,4 +84,17 @@ public class DroneRecords {
 		features.add(sensorFeature);
 	}
 
+	
+	public List<Feature> getFeatures() {
+		return this.features;
+	}
+
+	public List<String> getFlightPathTextFile() {
+		return this.flightPathTextFile;
+	}
+
+	public String getDate() {
+		return this.date;
+	}
+	
 }

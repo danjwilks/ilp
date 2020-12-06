@@ -102,9 +102,11 @@ public class Route {
 				}
 				
 				boolean isShiftedRow = false;
-				if (numberOfRowsToTop % 2 == 1) {
+				if (numberOfRowsToTop % 2 == 0) {
 					isShiftedRow = true;
 				}
+				System.out.println(isShiftedRow);
+				System.out.println(numberOfRowsToTop);
 				return isShiftedRow;
 			}
 			
@@ -256,7 +258,7 @@ public class Route {
 					fToPrint.add(Feature.fromGeometry(line));
 					
 				}
-				System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fToPrint).toJson());
+//				System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fToPrint).toJson());
 				return allPaths;
 				
 			}
@@ -648,7 +650,7 @@ public class Route {
 					removeFarthestFromStartEnd(sortedDroneLocationsToVisit);
 				
 				} while (!droneLocationsToVisit.isEmpty());
-//				
+				
 				return new Route(this);
 				
 		}

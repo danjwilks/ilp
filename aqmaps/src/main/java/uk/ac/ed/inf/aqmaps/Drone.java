@@ -41,7 +41,7 @@ public class Drone {
 				var point = Point.fromLngLat(currentDroneLocation.getLongitude(), 
 						currentDroneLocation.getLatitude()); 
 				var feature = Feature.fromGeometry(point);
-				droneRecords.features.add(feature);
+				droneRecords.getFeatures().add(feature);
 			}
 			
 			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
@@ -51,7 +51,7 @@ public class Drone {
 			}
 		}
 		
-    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.features);
+    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.getFeatures());
     	System.out.println("traversal: " + fc.toJson());
 		
 	}

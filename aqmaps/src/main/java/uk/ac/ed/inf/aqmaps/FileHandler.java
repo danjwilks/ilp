@@ -32,18 +32,18 @@ public class FileHandler {
 	}
 	
 	private static String buildSensorReadingsFilePath(DroneRecords droneRecords) {
-		return SENSOR_READINGS_FILENAME_PREFIX + droneRecords.date
+		return SENSOR_READINGS_FILENAME_PREFIX + droneRecords.getDate()
 				+ SENSOR_READINGS_FILE_EXSTENTION;
 	}
 	
 	private static String buildFlightPathFilePath(DroneRecords droneRecords) {
-		return FLIGHTPATH_FILENAME_PREFIX + droneRecords.date
+		return FLIGHTPATH_FILENAME_PREFIX + droneRecords.getDate()
 		+ FLIGHTPATH_FILE_EXSTENTION;
 	}
 	
 	private static void recordSensorReadings(DroneRecords droneRecords) {
 		
-		var featureCollection = FeatureCollection.fromFeatures(droneRecords.features);
+		var featureCollection = FeatureCollection.fromFeatures(droneRecords.getFeatures());
 		var contents = Arrays.asList(featureCollection.toJson());
 		var sensorReadingsFilePath = buildSensorReadingsFilePath(droneRecords);
 		Path file = Paths.get(sensorReadingsFilePath);
@@ -54,7 +54,7 @@ public class FileHandler {
 
 	private static void recordFlightPath(DroneRecords droneRecords) {
 		
-		var contents = droneRecords.flightPathTextFile;
+		var contents = droneRecords.getFlightPathTextFile();
 		var flightPathFilePath = buildFlightPathFilePath(droneRecords);
 		Path file = Paths.get(flightPathFilePath);
 		
