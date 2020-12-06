@@ -2,8 +2,6 @@ package uk.ac.ed.inf.aqmaps;
 
 
 import java.awt.geom.Line2D;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,13 +42,13 @@ public class ChristofidesRoute implements Route {
 	
 	public static class RouteBuilder {
 		
-		private static final BigDecimal ULLON = new BigDecimal(-3.192473);
-		private static final BigDecimal ULLAT = new BigDecimal(55.946233);
-		private static final BigDecimal LRLON = new BigDecimal(-3.184319);
-		private static final BigDecimal LRLAT = new BigDecimal(55.942617);
-		private static final int MAX_NUMBER_OF_MOVES = 60;
+		private static final double ULLON = -3.192473;
+		private static final double ULLAT = 55.946233;
+		private static final double LRLON = -3.184319;
+		private static final double LRLAT = 55.942617;
+		private static final int MAX_NUMBER_OF_MOVES = 150;
 		private static final double MAX_DIST_TO_SENSOR = 0.0002;
-		private static final BigDecimal MOVE_DISTANCE = new BigDecimal(0.0003);
+		private static final double MOVE_DISTANCE = 0.0003;
 		
 		private NoFlyZoneCollection noFlyZoneCollection;
 		private SensorCollection allAvailableSensors;
@@ -83,10 +81,10 @@ public class ChristofidesRoute implements Route {
 		
 		private void setFlyZone() {
 			
-			this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON.doubleValue(), ULLAT.doubleValue());
-			this.upperRightBoundaryPoint = Point.fromLngLat(LRLON.doubleValue(), ULLAT.doubleValue());
-			this.lowerRightBoundaryPoint = Point.fromLngLat(LRLON.doubleValue(), LRLAT.doubleValue());
-			this.lowerLeftBoundaryPoint = Point.fromLngLat(ULLON.doubleValue(), LRLAT.doubleValue());
+			this.upperLeftBoundaryPoint = Point.fromLngLat(ULLON, ULLAT);
+			this.upperRightBoundaryPoint = Point.fromLngLat(LRLON, ULLAT);
+			this.lowerRightBoundaryPoint = Point.fromLngLat(LRLON, LRLAT);
+			this.lowerLeftBoundaryPoint = Point.fromLngLat(ULLON, LRLAT);
 			
 			this.boundaryPointsList = Arrays.asList(
 					upperLeftBoundaryPoint, upperRightBoundaryPoint,
@@ -98,10 +96,10 @@ public class ChristofidesRoute implements Route {
 		
 		private boolean isFirstRowShifted() {
 			
-			var upperLeftLatStart = new BigDecimal(startEndLocation.getLatitude());
+			var upperLeftLatStart = startEndLocation.getLatitude();
 			int numberOfRowsToTop = 0;
-			while (upperLeftLatStart.compareTo(ULLAT) < 0) {
-				upperLeftLatStart = upperLeftLatStart.add(MOVE_DISTANCE);
+			while (upperLeftLatStart < ULLAT) {
+				upperLeftLatStart = upperLeftLatStart += MOVE_DISTANCE;
 				numberOfRowsToTop++;
 			}
 			
@@ -114,12 +112,12 @@ public class ChristofidesRoute implements Route {
 			return isShiftedRow;
 		}
 		
-	 	private BigDecimal getTriangleHeight() {
+	 	private double getTriangleHeight() {
 	 		
-			BigDecimal triangleEdgeLength = MOVE_DISTANCE;
-	 		BigDecimal halfTriangleEdgeLength = triangleEdgeLength.divide(new BigDecimal(2));
-			BigDecimal squaredDifference = triangleEdgeLength.pow(2).subtract(halfTriangleEdgeLength.pow(2));
-			BigDecimal triangleHeight = squaredDifference.sqrt(new MathContext(20));
+			double triangleEdgeLength = MOVE_DISTANCE;
+	 		double halfTriangleEdgeLength = triangleEdgeLength / 2;
+			double squaredDifference = Math.pow(triangleEdgeLength,2) - Math.pow(halfTriangleEdgeLength,2);
+			double triangleHeight = Math.sqrt(squaredDifference);
 			return triangleHeight;
 	 	}
 		
@@ -128,13 +126,13 @@ public class ChristofidesRoute implements Route {
 			ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 			var triangleHeight = getTriangleHeight();
 			
-			var upperLeftLonStart = new BigDecimal(startEndLocation.getLongitude());
-			while (upperLeftLonStart.compareTo(ULLON) > 0) {
-				upperLeftLonStart = upperLeftLonStart.subtract(MOVE_DISTANCE);
+			var upperLeftLonStart = startEndLocation.getLongitude();
+			while (upperLeftLonStart > ULLON) {
+				upperLeftLonStart = upperLeftLonStart - MOVE_DISTANCE;
 			}
-			var upperLeftLatStart = new BigDecimal(startEndLocation.getLatitude());
-			while (upperLeftLatStart.compareTo(ULLAT) < 0) {
-				upperLeftLatStart = upperLeftLatStart.add(triangleHeight);
+			var upperLeftLatStart = startEndLocation.getLatitude();
+			while (upperLeftLatStart < ULLAT) {
+				upperLeftLatStart = upperLeftLatStart += triangleHeight;
 			}
 			
 			var lowerRightLonEnd = LRLON;
@@ -147,13 +145,13 @@ public class ChristofidesRoute implements Route {
 			
 			System.out.println("triangleHeight: " + triangleHeight);
 			var triangleEdgeLength = MOVE_DISTANCE;
-			var halfTriangleEdgeLength = triangleEdgeLength.divide(new BigDecimal(2));
+			var halfTriangleEdgeLength = triangleEdgeLength / 2;
 			
-			for (var currLat = upperLeftLatStart; currLat.compareTo(lowerRightLatEnd) > 0; currLat = currLat.subtract(triangleHeight)) {
+			for (var currLat = upperLeftLatStart; currLat > lowerRightLatEnd; currLat = currLat -= triangleHeight) {
 				var droneLocationsRow = new ArrayList<DroneLocation>();
-				for (var currLon = upperLeftLonStart; currLon.compareTo(lowerRightLonEnd) < 0; currLon = currLon.add(triangleEdgeLength)) {
+				for (var currLon = upperLeftLonStart; currLon < lowerRightLonEnd; currLon = currLon += triangleEdgeLength) {
 					if (isShiftedRow) {
-						droneLocationsRow.add(new DroneLocation(currLon.add(halfTriangleEdgeLength), currLat));
+						droneLocationsRow.add(new DroneLocation(currLon + halfTriangleEdgeLength, currLat));
 					} else {
 						droneLocationsRow.add(new DroneLocation(currLon, currLat));
 					}
@@ -176,11 +174,6 @@ public class ChristofidesRoute implements Route {
 			System.out.println("hello my guy " + FeatureCollection.fromFeatures(fs).toJson());
 			return triangleGrid;
 		}
-	 	
-	 	private double round(double num) {
-//	 		return (double)Math.round(num * 100000d) / 100000d;
-	 		return num;
-	 	}
 		
 		private HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 			
