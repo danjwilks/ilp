@@ -46,11 +46,11 @@ public class DronePath {
 
 	
 	public DroneLocation getVertex1() {
-		return vertex1;
+		return this.vertex1;
 	}
 	
 	public DroneLocation getVertex2() {
-		return vertex2;
+		return this.vertex2;
 	}
 
 }

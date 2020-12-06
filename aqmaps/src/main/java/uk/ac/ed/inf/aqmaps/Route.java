@@ -93,14 +93,27 @@ public class Route {
 				this.flyZone = Polygon.fromLngLats(Arrays.asList(boundaryPointsList));
 			}
 			
+			public boolean isFirstRowShifted() {
+				double upperLeftLatStart = startEndLocation.getLatitude();
+				int numberOfRowsToTop = 0;
+				while (upperLeftLatStart < ULLAT) {
+					numberOfRowsToTop++;
+					upperLeftLatStart += 0.0003;
+				}
+				
+				boolean isShiftedRow = false;
+				if (numberOfRowsToTop % 2 == 1) {
+					isShiftedRow = true;
+				}
+				return isShiftedRow;
+			}
+			
 		 	public List<List<DroneLocation>> buildTriangleGridDroneLocations() {
 				
 				ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 				
 				double upperLeftLonStart = startEndLocation.getLongitude();
-				int numberOfRowsToLeft = 0;
 				while (upperLeftLonStart > ULLON) {
-					numberOfRowsToLeft++;
 					upperLeftLonStart -= 0.0003;
 				}
 				double upperLeftLatStart = startEndLocation.getLatitude();
@@ -111,21 +124,18 @@ public class Route {
 				double lowerRightLonEnd = LRLON;
 				double lowerRightLatEnd = LRLAT;
 				
-				boolean isShiftedRow = false;
+				boolean isShiftedRow = isFirstRowShifted();
 				
-				if (numberOfRowsToLeft % 2 == 1) {
-					isShiftedRow = true;
-				}
-				
+				System.out.println("isShiftedRow: " + isShiftedRow);
 				double latDecrement = Math.sqrt(Math.pow(0.0003, 2) - Math.pow(0.00015, 2));
 				double lonIncrement = 0.0003;
-				double rowShift = 0.00015;
+				double lonRowShift = 0.00015;
 				
 				for (double currLat = upperLeftLatStart; currLat > lowerRightLatEnd; currLat -= latDecrement) {
 					var droneLocationsRow = new ArrayList<DroneLocation>();
 					for (double currLon = upperLeftLonStart; currLon < lowerRightLonEnd; currLon += lonIncrement) {
 						if (isShiftedRow) {
-							droneLocationsRow.add(new DroneLocation(round(currLon + rowShift), round(currLat)));
+							droneLocationsRow.add(new DroneLocation(round(currLon + lonRowShift), round(currLat)));
 						} else {
 							droneLocationsRow.add(new DroneLocation(round(currLon), round(currLat)));
 						}
@@ -137,19 +147,28 @@ public class Route {
 					}
 					triangleGrid.add(droneLocationsRow);
 				}
-				
+				var fs = new ArrayList<Feature>();
+				for (var a : triangleGrid) {
+					for (var b : a) {
+						
+						fs.add(Feature.fromGeometry(b.getPoint()));
+						
+					}
+				}
+				System.out.println("hello my guy " + FeatureCollection.fromFeatures(fs).toJson());
 				return triangleGrid;
 			}
 		 	
 		 	private double round(double num) {
 		 		return (double)Math.round(num * 100000d) / 100000d;
+//		 		return num;
 		 	}
 			
 			public HashSet<DronePath> buildTriangleGridDronePaths(List<List<DroneLocation>> triangleGridDroneLocations) {
 				
 				var allPaths = new HashSet<DronePath>();
 				
-				boolean isRowShifted = false;
+				boolean isRowShifted = isFirstRowShifted(); // not always true, can be other way around
 				
 				for (int row = 0; row < triangleGridDroneLocations.size(); row++) {
 					for (int column = 0; column < triangleGridDroneLocations.get(row).size(); column++) {
@@ -183,11 +202,23 @@ public class Route {
 						}
 						
 						if (isRowShifted) {
-							if (row < triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1) {
+							if (row > 0 && row < triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1) {
 								allPaths.add(new DronePath(
 										triangleGridDroneLocations.get(row).get(column),
 										triangleGridDroneLocations.get(row + 1).get(column + 1))
 										);
+								allPaths.add(new DronePath(
+										triangleGridDroneLocations.get(row).get(column),
+										triangleGridDroneLocations.get(row - 1).get(column + 1))
+										);
+							} else if (row == 0 && column < triangleGridDroneLocations.get(row).size() - 1) {
+								
+								allPaths.add(new DronePath(
+										triangleGridDroneLocations.get(row).get(column),
+										triangleGridDroneLocations.get(row + 1).get(column + 1))
+										);
+							} else if (row == triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1){
+								
 								allPaths.add(new DronePath(
 										triangleGridDroneLocations.get(row).get(column),
 										triangleGridDroneLocations.get(row - 1).get(column + 1))
@@ -216,7 +247,8 @@ public class Route {
 									- path.getVertex2().getLatitude(), 2)
 							);
 					if (dist < 0.00029 || dist > 0.00031) {
-						System.out.println("error, triangle dist is wrong");
+//						System.out.println("error, triangle dist is wrong");
+//						break;
 					}
 					
 					var line = LineString.fromLngLats(Arrays.asList(path.getVertex1().getPoint(),
@@ -570,11 +602,25 @@ public class Route {
 				 return droneLocationsToVisitList;
 			}
 			
+			void printGraph(Graph<DroneLocation, DronePath> graph) {
+				var fs = new ArrayList<Feature>(); 
+				for (var n : graph.vertexSet()) {
+					fs.add(Feature.fromGeometry(n.getPoint()));
+				}
+				for (var ps : graph.edgeSet()) {
+					var line = LineString.fromLngLats(Arrays.asList(ps.getVertex1().getPoint(), ps.getVertex2().getPoint()));
+					fs.add(Feature.fromGeometry(line));
+				}
+				System.out.println("graph tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
+			}
+			
 			public Route buildBestRoute() {
 				
 				setFlyZone();
 				var triangleGraph = buildTriangleGraph();
+				printGraph(triangleGraph);
 				var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
+				printGraph(validDroneLocationsGraph);
 				var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
 				System.out.println("look for size: " + droneLocationsToVisit.size());
 				var sortedDroneLocationsToVisit = sortDroneLocationsToVisit(droneLocationsToVisit);
@@ -602,7 +648,7 @@ public class Route {
 					removeFarthestFromStartEnd(sortedDroneLocationsToVisit);
 				
 				} while (!droneLocationsToVisit.isEmpty());
-				
+//				
 				return new Route(this);
 				
 		}

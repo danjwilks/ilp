@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 
+import com.mapbox.geojson.FeatureCollection;
+
 public class App {
 	
 	private static void validateArgs(String[] args) {
@@ -53,6 +55,7 @@ public class App {
 	private static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
 		String noFlyZoneJsonString = WebClient.getBuildingJsonString();
 		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
+		System.out.println("no fly zones: " + FeatureCollection.fromJson(noFlyZoneJsonString).toJson());
 		return noFlyZoneCollection;
 	}
 	

@@ -96,7 +96,7 @@ public class DroneLocation {
 	}
 
 	public Point getPoint() {
-		return point;
+		return this.point;
 	}
 
 	public void setIsNearSensor(boolean isNearSensor) {
