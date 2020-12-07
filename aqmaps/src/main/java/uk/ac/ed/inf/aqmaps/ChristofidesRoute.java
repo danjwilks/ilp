@@ -340,7 +340,7 @@ public class ChristofidesRoute implements Route {
 					
 				}
 			}
-			System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fs).toJson());
+//			System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fs).toJson());
 			return triangleGrid;
 		}
 		
@@ -881,7 +881,7 @@ public class ChristofidesRoute implements Route {
 					fs.add(Feature.fromGeometry(line));
 				}
 			}
-			System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
+//			System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
 		}
 		
 		/**
@@ -958,7 +958,7 @@ public class ChristofidesRoute implements Route {
 				var line = LineString.fromLngLats(Arrays.asList(ps.getVertex1().getPoint(), ps.getVertex2().getPoint()));
 				fs.add(Feature.fromGeometry(line));
 			}
-			System.out.println("graph tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
+//			System.out.println("graph tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
 		}
 		
 		/**
@@ -1000,7 +1000,7 @@ public class ChristofidesRoute implements Route {
 				
 				if (hasLegalNumberOfMoves(orderedDroneLocationTour)) {
 					this.droneLocationsToVisit = orderedDroneLocationTour;
-					System.out.println("resulting number of vertices: " + droneLocationsToVisit.size());
+//					System.out.println("resulting number of vertices: " + droneLocationsToVisit.size());
 					break;
 				} 
 				// over the limit so must remove a droneLocation to visit.

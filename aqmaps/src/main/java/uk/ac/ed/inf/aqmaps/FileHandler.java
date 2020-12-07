@@ -36,13 +36,16 @@ public class FileHandler {
 //	TODO delete this
 	public static void writeDroneStats(DroneRecords droneRecords) {
 		
-		var moveCount = String.valueOf(droneRecords.getMoveNumber());
+		var moveCount = String.valueOf(droneRecords.getMoveNumber()) + ",";
 		
 		try {
-		    Files.write(Paths.get("drone stats.txt"), 
+		    Files.write(Paths.get("DroneStats.txt"), 
 		    		moveCount.getBytes(), StandardOpenOption.APPEND);
 		}catch (IOException e) {
-		    //exception handling left as an exercise for the reader
+			try {
+				Files.write(Paths.get("DroneStats.txt"), moveCount.getBytes());
+			} catch (IOException e1) {
+			}
 		}
 		
 	}
