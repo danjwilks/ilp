@@ -141,7 +141,7 @@ public class App {
 	 * @throws InterruptedException
 	 */
 	public static void main( String[] args ) throws IOException, InterruptedException {
-    	
+//    	TODO system.exit(1); 
     	validateArgs(args);
     	
     	String day = args[0];

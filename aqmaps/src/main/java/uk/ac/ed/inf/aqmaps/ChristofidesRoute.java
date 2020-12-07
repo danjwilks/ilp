@@ -252,11 +252,12 @@ public class ChristofidesRoute implements Route {
 			}
 			
 			boolean isShiftedRow = false;
+			// the first row of drone locations is shifted
+			// only if there is an even number of rows
+			// from the original start location.
 			if (numberOfRowsToTop % 2 == 0) {
 				isShiftedRow = true;
 			}
-			System.out.println(isShiftedRow);
-			System.out.println(numberOfRowsToTop);
 			return isShiftedRow;
 		}
 		
@@ -269,6 +270,7 @@ public class ChristofidesRoute implements Route {
 	 	 */
 	 	private double getTriangleHeight() {
 	 		
+	 		// use simple pythagoras formula
 			double triangleEdgeLength = MOVE_DISTANCE;
 	 		double halfTriangleEdgeLength = triangleEdgeLength / 2;
 			double squaredDifference = Math.pow(triangleEdgeLength,2) - Math.pow(halfTriangleEdgeLength,2);
@@ -289,6 +291,8 @@ public class ChristofidesRoute implements Route {
 			ArrayList<List<DroneLocation>> triangleGrid = new ArrayList<>();
 			var triangleHeight = getTriangleHeight();
 			
+			// move start latitudes and longitudes to just outside the flyzone.
+			
 			var upperLeftLonStart = startEndLocation.getLongitude();
 			while (upperLeftLonStart > ULLON) {
 				upperLeftLonStart = upperLeftLonStart - MOVE_DISTANCE;
@@ -302,23 +306,24 @@ public class ChristofidesRoute implements Route {
 			var lowerRightLatEnd = LRLAT;
 			
 			boolean isShiftedRow = isFirstRowShifted();
-			
-			System.out.println("isShiftedRow: " + isShiftedRow);
-			
-			
-			System.out.println("triangleHeight: " + triangleHeight);
+
 			var triangleEdgeLength = MOVE_DISTANCE;
 			var halfTriangleEdgeLength = triangleEdgeLength / 2;
 			
 			for (var currLat = upperLeftLatStart; currLat > lowerRightLatEnd; currLat = currLat -= triangleHeight) {
+				// new drone location row
 				var droneLocationsRow = new ArrayList<DroneLocation>();
 				for (var currLon = upperLeftLonStart; currLon < lowerRightLonEnd; currLon = currLon += triangleEdgeLength) {
 					if (isShiftedRow) {
+						// shift row by half a triangle length such that the drone locations within
+						// this row appear halfway between the above and below drone locations
+						// creating a equilateral triangle.
 						droneLocationsRow.add(new DroneLocation(currLon + halfTriangleEdgeLength, currLat));
 					} else {
 						droneLocationsRow.add(new DroneLocation(currLon, currLat));
 					}
 				}
+				// alteranate between shifting row and unshifting row.
 				if (isShiftedRow) {
 					isShiftedRow = false;
 				} else {
@@ -326,6 +331,7 @@ public class ChristofidesRoute implements Route {
 				}
 				triangleGrid.add(droneLocationsRow);
 			}
+//			TODO: delete this
 			var fs = new ArrayList<Feature>();
 			for (var a : triangleGrid) {
 				for (var b : a) {
@@ -357,52 +363,34 @@ public class ChristofidesRoute implements Route {
 			for (int row = 0; row < triangleGridDroneLocations.size(); row++) {
 				for (int column = 0; column < triangleGridDroneLocations.get(row).size(); column++) {
 					
-					if (row > 1) {
+					// add paths to build rhombus.
+					if (row > 0) {
+						// add path from the current location to the above location.
 						allPaths.add(new DronePath(
 								triangleGridDroneLocations.get(row).get(column),
 								triangleGridDroneLocations.get(row - 1).get(column)
 								));
 					}
 					
-					if (row < triangleGridDroneLocations.size() - 1) {
-						allPaths.add(new DronePath(
-								triangleGridDroneLocations.get(row).get(column),
-								triangleGridDroneLocations.get(row + 1).get(column))
-								);
-					}
-					
 					if (column > 1) {
+						// add path from current point to the left point.
 						allPaths.add(new DronePath(
 								triangleGridDroneLocations.get(row).get(column),
 								triangleGridDroneLocations.get(row).get(column - 1))
 								);
 					}
 					
-					if (column < triangleGridDroneLocations.get(row).size() - 1) {
-						allPaths.add(new DronePath(
-								triangleGridDroneLocations.get(row).get(column),
-								triangleGridDroneLocations.get(row).get(column + 1))
-								);
-					}
-					
 					if (isRowShifted) {
-						if (row > 0 && row < triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1) {
+						// add paths to build triangles from above rhombus.
+						if (row < triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1) {
+							// add path from current point to the below and right point.
 							allPaths.add(new DronePath(
 									triangleGridDroneLocations.get(row).get(column),
 									triangleGridDroneLocations.get(row + 1).get(column + 1))
 									);
-							allPaths.add(new DronePath(
-									triangleGridDroneLocations.get(row).get(column),
-									triangleGridDroneLocations.get(row - 1).get(column + 1))
-									);
-						} else if (row == 0 && column < triangleGridDroneLocations.get(row).size() - 1) {
-							
-							allPaths.add(new DronePath(
-									triangleGridDroneLocations.get(row).get(column),
-									triangleGridDroneLocations.get(row + 1).get(column + 1))
-									);
-						} else if (row == triangleGridDroneLocations.size() - 1 && column < triangleGridDroneLocations.get(row).size() - 1){
-							
+						}
+						if (row > 0 && column < triangleGridDroneLocations.get(row).size() - 1){
+							// add path from current point to the below and right point.
 							allPaths.add(new DronePath(
 									triangleGridDroneLocations.get(row).get(column),
 									triangleGridDroneLocations.get(row - 1).get(column + 1))
@@ -411,16 +399,18 @@ public class ChristofidesRoute implements Route {
 					} 
 					
 				}
-				
+				// update for next iteration.
 				if (isRowShifted) {
+					// next row is not shifted.
 					isRowShifted = false;
 				} else {
+					// next row is shifted.
 					isRowShifted = true;
 				}
 				
 			}
 			
-			
+//			TODO: remove
 			var fToPrint = new ArrayList<Feature>();
 			for (var path : allPaths) {
 				
@@ -454,6 +444,7 @@ public class ChristofidesRoute implements Route {
 			
 			var graph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
 			
+			// add all drone locations to result graph.
 			List<List<DroneLocation>> triangleGridDroneLocations = buildTriangleGridDroneLocations();
 			HashSet<DronePath> triangleGridDronePaths = buildTriangleGridDronePaths(triangleGridDroneLocations);
 			for (var rowOfDroneLocations : triangleGridDroneLocations) {
@@ -462,6 +453,7 @@ public class ChristofidesRoute implements Route {
 				}
 			}
 			
+			// add all paths to result graph.
 			for (var dronePath : triangleGridDronePaths) {
 				graph.addEdge(dronePath.getVertex1(), dronePath.getVertex2(), dronePath);
 				graph.setEdgeWeight(dronePath, MOVE_DISTANCE);
@@ -475,7 +467,7 @@ public class ChristofidesRoute implements Route {
 		 * Determines if the given drone location is over 
 		 * a no fly zone.
 		 * 
-		 * @param  droneLocation
+		 * @param  droneLocation to check
 		 * @return true if drone location is over a no 
 		 *         fly zone.
 		 */
@@ -524,17 +516,22 @@ public class ChristofidesRoute implements Route {
 			var startDroneLocation = dronePath.getVertex1();
 			var endDroneLocation = dronePath.getVertex2();
 			
-			for (var building : noFlyZoneCollection.getNoFlyZones()) {
+			for (var noFlyZone : noFlyZoneCollection.getNoFlyZones()) {
 				
+				// check if either start of end location is within no fly zone.
 				if (locationOverNoFlyZone(startDroneLocation) || locationOverNoFlyZone(endDroneLocation)) {
 					return true;
 				}
 				
-				var buildingPoints = building.coordinates().get(0);
-				for (int startPointIndex = 0; startPointIndex < buildingPoints.size() -1; startPointIndex++) {
-					var buildingEdgeStartPoint = buildingPoints.get(startPointIndex);
-					var buildingEdgeEndPoint = buildingPoints.get(startPointIndex + 1);
+				// iterate through all points within no flyzone
+				var noFlyZonePoints = noFlyZone.coordinates().get(0); // coordinates().get(0) contains list of its points.
+				for (int startPointIndex = 0; startPointIndex < noFlyZonePoints.size() -1; startPointIndex++) {
 					
+					// get noFlyZone edge points. 
+					var buildingEdgeStartPoint = noFlyZonePoints.get(startPointIndex);
+					var buildingEdgeEndPoint = noFlyZonePoints.get(startPointIndex + 1);
+					
+					// check if noFlyZone edge intersects drone path line.
 					if (linesIntersect(startDroneLocation.getPoint(), endDroneLocation.getPoint(), buildingEdgeStartPoint, buildingEdgeEndPoint)) {
 						return true;
 					}
@@ -580,9 +577,11 @@ public class ChristofidesRoute implements Route {
 			}
 			
 			for (int startPointIndex = 0; startPointIndex < boundaryPointsList.size() - 1; startPointIndex++) {
+				// get fly zone edge points.
 				var boundaryStartPoint = boundaryPointsList.get(startPointIndex);
 				var boundaryEndPoint = boundaryPointsList.get(startPointIndex + 1);
 				
+				// check if fly zone edge intersect drone path.
 				if (linesIntersect(startDroneLocation.getPoint(), endDroneLocation.getPoint(), boundaryStartPoint, boundaryEndPoint)) {
 					return false;
 				}
@@ -633,14 +632,15 @@ public class ChristofidesRoute implements Route {
 			
 			var validDroneLocationsGraph = new DefaultUndirectedWeightedGraph<DroneLocation, DronePath>(DronePath.class);
 			
+			// locations to validate
 			var droneLocations = triangleGraph.vertexSet();
-			
 			for (var droneLocation : droneLocations) {
 				if (isValidDroneLocation(droneLocation)) {
 					validDroneLocationsGraph.addVertex(droneLocation);
 				}
 			}
 			
+			// paths to validate
 			var dronePaths = triangleGraph.edgeSet();
 			var arbitraryEdgeWeight = 1;
 			for (var dronePath : dronePaths) {
@@ -706,6 +706,7 @@ public class ChristofidesRoute implements Route {
 			for (var sensor : allAvailableSensors.getSensors()) {
 				for (var droneLocation : validDroneLocations.vertexSet()) {
 					if (sensorIsWithinDistance(sensor, droneLocation)) {
+						// each drone location can only have 1 nearby sensor
 						droneLocationsToVisit.add(droneLocation);
 						droneLocation.setIsNearSensor(true);
 						droneLocation.setNearbySensor(sensor);
@@ -714,6 +715,7 @@ public class ChristofidesRoute implements Route {
 				}
 			}
 			
+			// drone location must start and end at a specified location
 			for (var droneLocation : validDroneLocations.vertexSet()) {
 				if (droneLocation.equals(startEndLocation)) {
 					droneLocationsToVisit.add(droneLocation);
@@ -735,33 +737,35 @@ public class ChristofidesRoute implements Route {
 		private Graph<DroneLocation, SensorPath> buildShortestPathCompleteSensorGraph(
 				Graph<DroneLocation, DronePath> triangleGraph, List<DroneLocation> sortedDroneLocationsToVisit) {
 			
-			var simpleSensorGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
-			System.out.println(sortedDroneLocationsToVisit.size());
+			// graph of paths between sensor using SensorPath instead of DronePath since we want 
+			// to compress the drone paths between sensors to a single value (path weight) so 
+			// we can find the shortest tour between all the sensors using christofides alogrithm. 
+			var completeSensorGraph = new DefaultUndirectedWeightedGraph<DroneLocation, SensorPath>(SensorPath.class);
 			
-			int count = 0;
+			// add path and edges between all the sensors and also to the start location to build
+			// a simple sensor graph.
 			for (int sourceIndex = 0; sourceIndex < sortedDroneLocationsToVisit.size(); sourceIndex++) {
 				for (int sinkIndex = sourceIndex + 1; sinkIndex < sortedDroneLocationsToVisit.size(); sinkIndex++) {
 					
 					var sourceDroneLocation = sortedDroneLocationsToVisit.get(sourceIndex);
 					var sinkDroneLocation = sortedDroneLocationsToVisit.get(sinkIndex);
 					
+					// find the shortest path between two locations we want to visit.
 					var dijk = new BidirectionalDijkstraShortestPath<DroneLocation, DronePath>(triangleGraph);
 					var graphWalk = dijk.getPath(sourceDroneLocation, sinkDroneLocation);
 					var vertices = graphWalk.getVertexList();
 					var edges = graphWalk.getEdgeList();
 					
-					simpleSensorGraph.addVertex(sourceDroneLocation);
-					simpleSensorGraph.addVertex(sinkDroneLocation);
+					completeSensorGraph.addVertex(sourceDroneLocation);
+					completeSensorGraph.addVertex(sinkDroneLocation);
 					
 					var sensorPath = new SensorPath(vertices, edges, sourceDroneLocation, sinkDroneLocation);
-					simpleSensorGraph.addEdge(sourceDroneLocation, sinkDroneLocation, sensorPath);
-					simpleSensorGraph.setEdgeWeight(sensorPath, sensorPath.getWeight());
-					count++;
+					completeSensorGraph.addEdge(sourceDroneLocation, sinkDroneLocation, sensorPath);
+					completeSensorGraph.setEdgeWeight(sensorPath, sensorPath.getWeight());
 				}
 				
 			}
-			System.out.println(count);
-			return simpleSensorGraph;
+			return completeSensorGraph;
 		}
 		
 		/**
@@ -782,10 +786,11 @@ public class ChristofidesRoute implements Route {
 			
 			var indexes = new ArrayList<Integer>();
 			
+			// we want to set the first value to index of the start location
 			for (int i = startEndIndex; i < sensorRouteGraph.getLength(); i++) {
 				indexes.add(i);
 			}
-			
+			// add the rest of the indexes.
 			for (int i = 0; i < startEndIndex; i++) {
 				indexes.add(i);
 			}
@@ -827,27 +832,28 @@ public class ChristofidesRoute implements Route {
 		private List<DroneLocation> parseDroneLocations(GraphPath<DroneLocation, SensorPath> sensorRoute) {
 			
 			var orderedDroneLocationTour = new ArrayList<DroneLocation>();
+			
 			var sensorPaths = sensorRoute.getEdgeList();
 			var sensorDroneLocations = sensorRoute.getVertexList();
-	
 			var sensorIndexes = buildCorrectOrderSensorIndexes(sensorRoute);
-			System.out.println(sensorIndexes);
-					
+			
+			// traverse the sensors in the correct order (starting from the start location).
 			for (var sensorIndex : sensorIndexes) {
 				
 				var sourceSensorDroneLocation = sensorDroneLocations.get(sensorIndex);
-				
-	
 				var sensorPath = sensorPaths.get(sensorIndex);
+				// get the individual drone moves that make up the path between two sensors. 
 				var dronePaths = sensorPath.getLocationsFrom(sourceSensorDroneLocation);
 				
 				var currentDroneLocation = sourceSensorDroneLocation;
-				
+				// iterate through the individual drone moves and add to ordered list of moves.
 				for (int droneIndex = 0; droneIndex < dronePaths.size(); droneIndex++) {
 					
 					orderedDroneLocationTour.add(currentDroneLocation);
 					var dronePath = dronePaths.get(droneIndex);
+					// dronePath is undirected so we have to get the connected location this way.
 					var nextDroneLocation = dronePath.getConnectingDroneLocation(currentDroneLocation);
+					// update for next iteration
 					currentDroneLocation = nextDroneLocation;
 				}
 				
@@ -855,8 +861,6 @@ public class ChristofidesRoute implements Route {
 			// start of path should be equal to the end of the part to 
 			// form a closed loop tour.
 			orderedDroneLocationTour.add(orderedDroneLocationTour.get(0));
-			
-			System.out.println("orderedDroneLocationPath vertex list size " + orderedDroneLocationTour.size());
 			
 			return orderedDroneLocationTour;
 			
@@ -931,7 +935,6 @@ public class ChristofidesRoute implements Route {
 		 */
 		private List<DroneLocation> sortDroneLocationsToVisit(Set<DroneLocation> droneLocationsToVisitSet) {
 			 ArrayList<DroneLocation> droneLocationsToVisitList = new ArrayList<DroneLocation>(droneLocationsToVisitSet);
-			 System.out.println("number of droneLocations in the set: " + droneLocationsToVisitSet.size());
 			 Collections.sort(droneLocationsToVisitList, 
 					 (a, b) -> Double.compare(
 							 a.calcDistTo(startEndLocation),
@@ -942,7 +945,7 @@ public class ChristofidesRoute implements Route {
 		}
 		
 		/**
-		 * 
+//		 * TODO delete
 		 * 
 		 * @param graph
 		 */
@@ -978,23 +981,21 @@ public class ChristofidesRoute implements Route {
 			
 			setFlyZone();
 			var triangleGraph = buildTriangleGraph();
-			printGraph(triangleGraph);
 			var validDroneLocationsGraph = buildValidDroneLocationsGraph(triangleGraph);
-			printGraph(validDroneLocationsGraph);
 			var droneLocationsToVisit = findDroneLocationsToVisit(validDroneLocationsGraph);
-			System.out.println("look for size: " + droneLocationsToVisit.size());
+			// sorted in ascending order of distance to start location
 			var sortedDroneLocationsToVisit = sortDroneLocationsToVisit(droneLocationsToVisit);
 			
-			do {
+			// the tour we generate might be too long so we must keep removing vertices
+			// until tour size is within limit.
+			do {  
 				var completeSensorGraph = buildShortestPathCompleteSensorGraph(validDroneLocationsGraph, 
 						sortedDroneLocationsToVisit);
 				
 				var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
+				// tour of the sensors and start location given with a compressed representation of 
+				// sensor paths.
 				var sensorTour = christofides.getTour(completeSensorGraph);
-				
-				printTour(sensorTour);
-				
-				System.out.println("chrisofides algo path size: " + sensorTour.getEdgeList().size());
 				var orderedDroneLocationTour = parseDroneLocations(sensorTour);
 				
 				if (hasLegalNumberOfMoves(orderedDroneLocationTour)) {
