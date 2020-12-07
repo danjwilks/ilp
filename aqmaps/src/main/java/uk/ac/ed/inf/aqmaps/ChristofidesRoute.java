@@ -340,7 +340,7 @@ public class ChristofidesRoute implements Route {
 					
 				}
 			}
-			System.out.println("hello my guy " + FeatureCollection.fromFeatures(fs).toJson());
+			System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fs).toJson());
 			return triangleGrid;
 		}
 		
@@ -1011,6 +1011,6 @@ public class ChristofidesRoute implements Route {
 			
 			return new ChristofidesRoute(this);
 			
-	}
+		}
 	}
 }

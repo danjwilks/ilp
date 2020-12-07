@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.util.List;
+
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
@@ -74,9 +76,22 @@ public class Drone {
 	 */
 	public void traverse(Route route) {
 		
-		recordUnvisitedSensors(route.getUnvisitedSensors());
+		try { 
+			recordUnvisitedSensors(route.getUnvisitedSensors());
+		} catch (Exception e) {
+			System.out.println("Could not record unvisited sensor locations.");
+			e.printStackTrace();
+		}
 		
-		var droneLocationsToVisit = route.getDroneLocationsToVisit();
+		List<DroneLocation> droneLocationsToVisit = null;
+		
+		try {
+			droneLocationsToVisit = route.getDroneLocationsToVisit();
+		} catch (Exception e) {
+			System.out.println("Could not get drone locations from route.");
+			e.printStackTrace();
+			return;
+		}
 		
 		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < droneLocationsToVisit.size() - 1; droneLocationToVisitIndex++) {
 			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
@@ -92,7 +107,12 @@ public class Drone {
 			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
 			currentDroneLocation = nextDroneLocation;
 			if (currentDroneLocation.getIsNearSensor()) {
-				recordSensorDetails(currentDroneLocation.getNearbySensor());
+				try {
+					recordSensorDetails(currentDroneLocation.getNearbySensor());
+				} catch (Exception e) {
+					System.out.println("Could not record sensor information for current sensor.");
+					e.printStackTrace();
+				}
 			}
 		}
 		

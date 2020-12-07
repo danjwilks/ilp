@@ -140,9 +140,15 @@ public class App {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static void main( String[] args ) throws IOException, InterruptedException {
+	public static void main( String[] args ) {
 //    	TODO system.exit(1); 
-    	validateArgs(args);
+		try {
+			validateArgs(args);
+		} catch (Exception e) {
+			System.out.println("Arguments are not valid.");
+			e.printStackTrace();
+			System.exit(1);
+		}
     	
     	String day = args[0];
     	String month = args[1];
@@ -153,21 +159,48 @@ public class App {
     	int randomSeed = Integer.parseInt(args[5]);
     	int portNumber = Integer.parseInt(args[6]);
     	
-    	var noFlyZones = getNoFlyZoneCollection();
-    	var sensors = getSensorCollection(day, month, year);
-    	
+    	NoFlyZoneCollection noFlyZones = null;
+    	SensorCollection sensors = null;
+    	Route route = null;
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
     	
-    	var bestRoute = new ChristofidesRoute.RouteBuilder()
-    			.setNoFlyZones(noFlyZones)
-    			.setAvailableSensors(sensors)
-    			.setStartEndLocation(startLocation)
-    			.buildBestRoute();
+    	try {
+    		noFlyZones = getNoFlyZoneCollection();
+    	} catch (Exception e) {
+    		System.out.println("Could not get no fly zones.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
+    	try {
+    		sensors = getSensorCollection(day, month, year);
+    	} catch (Exception e) {
+    		System.out.println("Could not get sensor to visit.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
+    	
+    	try {
+	    	route = new ChristofidesRoute.RouteBuilder()
+	    			.setNoFlyZones(noFlyZones)
+	    			.setAvailableSensors(sensors)
+	    			.setStartEndLocation(startLocation)
+	    			.buildBestRoute();
+    	} catch (Exception e) {
+    		System.out.println("Could not build route for drone.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
     	
     	var drone = new Drone(startLocation, date);
-    	drone.traverse(bestRoute);
+    	drone.traverse(route);
     	
-    	FileHandler.writeToFile(drone.getDroneRecords());
+    	try { 
+    		FileHandler.writeToFile(drone.getDroneRecords());
+    	} catch (Exception e) {
+    		System.out.println("Could not write drone records to file.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
     	
     }
 }
