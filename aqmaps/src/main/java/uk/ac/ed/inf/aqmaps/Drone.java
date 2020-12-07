@@ -4,40 +4,85 @@ import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 
+/**
+ * @author S1851664
+ * 
+ * Drone that is able to collect sensor readings.
+ *
+ */
 public class Drone {
 	
 	private SensorReader sensorReader;
+	/**
+	 * Stores sensor readings and path information.
+	 */
 	private DroneRecords droneRecords;
 	
+	/**
+	 * The start and the end location of the drone.
+	 */
+	private DroneLocation startEndLocation;
+	
+	/**
+	 * @param startEndLocation
+	 * @param date when the drone is called to traverse.
+	 */
 	public Drone(DroneLocation startEndLocation, String date) {
 		this.sensorReader = new SensorReader();
 		this.droneRecords = new DroneRecords(date);
+		this.startEndLocation = startEndLocation;
 	}
 	
+	/**
+	 * Stores sensor readings to the drone records.
+	 * 
+	 * @param sensor
+	 */
 	private void recordSensorDetails(Sensor sensor) {
 		var sensorInformation = sensorReader.read(sensor);
 		droneRecords.addSensorInformation(sensorInformation);
 	}
 	
+	/**
+	 * Stores path information to the drone records.
+	 * 
+	 * @param source
+	 * @param sink
+	 */
 	private void recordDronePath(DroneLocation source, DroneLocation sink) {
 		droneRecords.addPath(source, sink);
 	}
 
+	/**
+	 * Moves the drone from the given source location
+	 * to the sink location and records the drone 
+	 * path.
+	 * 
+	 * @param source
+	 * @param sink
+	 */
 	private void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
 		recordDronePath(source, sink);
 	}
 
-	public void traverse(ChristofidesRoute bestRoute) {
+	/**
+	 * Makes drone traverse the given route and collect
+	 * sensor information as it passes sensors and 
+	 * record sensor information.
+	 * 
+	 * @param route the path for the drone to follow.
+	 */
+	public void traverse(Route route) {
 		
-		recordUnvisitedSensors(bestRoute.getUnvisitedSensors());
+		recordUnvisitedSensors(route.getUnvisitedSensors());
 		
-		var droneLocationsToVisit = bestRoute.getDroneLocationsToVisit();
+		var droneLocationsToVisit = route.getDroneLocationsToVisit();
 		
 		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < droneLocationsToVisit.size() - 1; droneLocationToVisitIndex++) {
 			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
 			var nextDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex + 1);
 			
-			if (currentDroneLocation.getIsStart()) { // delete later
+			if (currentDroneLocation.equals(startEndLocation)) { // TODO: delete later
 				var point = Point.fromLngLat(currentDroneLocation.getLongitude(), 
 						currentDroneLocation.getLatitude()); 
 				var feature = Feature.fromGeometry(point);
@@ -56,14 +101,22 @@ public class Drone {
 		
 	}
 
+	/**
+	 * Records the unvisited sensors to drone records.
+	 * 
+	 * @param unvisitedSensors
+	 */
 	private void recordUnvisitedSensors(SensorCollection unvisitedSensors) {
 		
 		for (var sensor : unvisitedSensors.getSensors()) {
-			droneRecords.addSensorInformation(sensorReader.getUnvisitedInfo(sensor));
+			droneRecords.addSensorInformation(sensorReader.buildUnvisitedInfo(sensor));
 		}
 		
 	}
 
+	/**
+	 * @return the drones records.
+	 */
 	public DroneRecords getDroneRecords() {
 		return droneRecords;
 	}

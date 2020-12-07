@@ -3,12 +3,32 @@ package uk.ac.ed.inf.aqmaps;
 import static uk.ac.ed.inf.aqmaps.Colours.*;
 import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 
+/**
+ * @author S1851664
+ *
+ * Class representing a sensor reader. It can
+ * read and interpret information from a sensor.
+ */
 public class SensorReader {
 	
+	/**
+	 * The maximum battery reading of a sensor.
+	 */
 	private static final double MAX_BATTERY = 100.0;
+	/**
+	 * 10% of the maximum battery reading.
+	 */
 	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
 	
-	public SensorInformation getUnvisitedInfo(Sensor sensor) {
+	/**
+	 * Builds information for a sensor that has not
+	 * been visited.
+	 * 
+	 * @param sensor that has not been visited.
+	 * @return the information for the unvisited 
+	 * 		   sensor.
+	 */
+	public SensorInformation buildUnvisitedInfo(Sensor sensor) {
 		
 		var location = readWhat3Words(sensor);
 		
@@ -22,6 +42,13 @@ public class SensorReader {
 		
 	}
 	
+	/**
+	 * Reads sensor information from a given sensor.
+	 * 
+	 * @param sensor to read information from.
+	 * @return the sensor information read from
+	 *         the corresponding sensor.
+	 */
 	public SensorInformation read(Sensor sensor) {
 		
 		var location = readWhat3Words(sensor);
@@ -42,18 +69,46 @@ public class SensorReader {
 		
 	}
 	
+	/**
+	 * Reads the what3Words from the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return what3words location read from sensor.
+	 */
 	private String readWhat3Words(Sensor sensor) {
 		return sensor.getLocation();
 	}
 	
+	/**
+	 * Reads and interprets a rgb value 
+	 * corresponding to the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return rgb string interpreted from the 
+	 *         sensor.
+	 */
 	private String readFeatureRgbString(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
+	/**
+	 * Reads and interprets the marker color
+	 * of the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return marker color interpreted from sensor.
+	 */
 	private String readMarkerColor(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
+	/**
+	 * Reads and interprets the marker symbol
+	 * of the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return the marker symbol.
+	 */
 	private String readMarkerSymbol(Sensor sensor) {
 		String markerSymbol = "";
 		if (sensor.getBattery() < TEN_PERCENT_BATTERY) {
@@ -76,6 +131,13 @@ public class SensorReader {
 		return markerSymbol;
 	}
 	
+	/**
+	 * determines the corresponding hex string
+	 * for a given sensor reading.
+	 * 
+	 * @param sensor to read from.
+	 * @return corresponding hex string.
+	 */
 	private String determineHexString(Sensor sensor) {
 		
 		String hexString = "";

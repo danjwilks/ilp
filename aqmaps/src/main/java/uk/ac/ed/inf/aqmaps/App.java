@@ -6,8 +6,24 @@ import java.time.LocalDate;
 
 import com.mapbox.geojson.FeatureCollection;
 
+/**
+ * @author S1851664
+ *
+ * Runs the main program. 
+ * 
+ * Parses input, gets the best route to traverse and 
+ * tells the drone to traverse said route then 
+ * records the records from the drone traversal.
+ */
 public class App {
 	
+	/**
+	 * Validates the input program arguments.
+	 * 
+	 * @param args 	day, week, month, start longitude, start 
+	 * 				latitude, start longitude, random seed,
+	 * 				port number.  
+	 */
 	private static void validateArgs(String[] args) {
 		
 		if (args.length != 7) {
@@ -29,8 +45,8 @@ public class App {
 		}
 		
 		try {
-			Double.parseDouble(args[3]);
-			Double.parseDouble(args[4]);
+			Double.parseDouble(args[3]); // start longitude
+			Double.parseDouble(args[4]); // start latitude
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("X or Y starting coordinate should be doubles.");
 		}
@@ -41,6 +57,14 @@ public class App {
 		
 	}
 	
+	/**
+	 * Validates if the given date is a valid date.
+	 * 
+	 * @param  day
+	 * @param  month
+	 * @param  year
+	 * @return true if date is valid
+	 */
 	private static boolean dateIsValid(int day, int month, int year) {
 		
 	    boolean dateIsValid = true;
@@ -52,13 +76,29 @@ public class App {
 	    return dateIsValid;
 	}
 	
+	/**
+	 * Retrieves from the web client the no fly zones
+	 * 
+	 * @return a collection of no fly zones
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
-		String noFlyZoneJsonString = WebClient.getBuildingJsonString();
+		String noFlyZoneJsonString = WebClient.getNoFlyZonesJsonString();
 		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
 		System.out.println("no fly zones: " + FeatureCollection.fromJson(noFlyZoneJsonString).toJson());
 		return noFlyZoneCollection;
 	}
 	
+	/**
+	 * Retrieves from web client the sensors to visit
+	 * on the given date. 
+	 * 
+	 * @param  day
+	 * @param  month
+	 * @param  year
+	 * @return a collection of sensors to visit
+	 */
 	private static SensorCollection getSensorCollection(String day, String month, String year) {
 		var sensorJsonString = WebClient.getSensorsJsonString(day, month, year);
     	var sensorCollection = SensorCollection.fromJsonString(sensorJsonString);
@@ -70,6 +110,14 @@ public class App {
     	return sensorCollection;
 	}
 	
+	/**
+	 * Retrieves from the web client the what3words 
+	 * location for the given sensor.
+	 * 
+	 * @param  sensor
+	 * @return the what3Words corresponding to the given
+	 * 		   sensor
+	 */
 	private static What3Words getThreeWordLocation(Sensor sensor) {
 		String words = sensor.getLocation().replaceAll("\\.", "/");
 		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
@@ -78,6 +126,20 @@ public class App {
 		
 	}
 
+	/**
+	 * How the whole program is called.
+	 * 	
+	 * Parses input, gets the best route to traverse and 
+	 * tells the drone to traverse said route then 
+	 * records the records from the drone traversal.
+	 * 
+	 * 
+	 * @param args 	day, week, month, start longitude, start 
+	 * 				latitude, start longitude, random seed,
+	 * 				port number. 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	public static void main( String[] args ) throws IOException, InterruptedException {
     	
     	validateArgs(args);
