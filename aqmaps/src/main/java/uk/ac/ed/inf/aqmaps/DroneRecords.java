@@ -32,9 +32,9 @@ public class DroneRecords {
 	private List<String> flightPathTextFile;
 	
 	/**
-	 * The number of lines present in the text file.
+	 * The number of moves completed.
 	 */
-	private int lineCount = 0;
+	private int moveNumber = 0;
 	
 	/**
 	 * @param date of drone recording.
@@ -80,7 +80,7 @@ public class DroneRecords {
 		
 		var directionDegree = source.calcAngleTo(sink);
 		
-		textFileLine += lineCount                             + ",";
+		textFileLine += moveNumber                            + ",";
 		textFileLine += String.valueOf(source.getLongitude()) + ",";
 		textFileLine += String.valueOf(source.getLatitude())  + ",";
 		textFileLine += String.valueOf(directionDegree)       + ",";
@@ -104,7 +104,7 @@ public class DroneRecords {
 		features.add(pathFeature);
 		
 		var pathTextFileLine = buildTextFileLine(source, sink);
-		lineCount++;
+		moveNumber++;
 		flightPathTextFile.add(pathTextFileLine);
 		
 	}
@@ -160,6 +160,14 @@ public class DroneRecords {
 	 */
 	public String getDate() {
 		return this.date;
+	}
+	
+	/**
+	 * @return the number of moves the drone has
+	 *         completed.
+	 */
+	public int getMoveNumber() {
+		return this.moveNumber;
 	}
 	
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption; //TODO delete
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,10 +26,25 @@ public class FileHandler {
 	 * @param droneRecords the records to write to file.
 	 */
 	public static void writeToFile(DroneRecords droneRecords) {
+		
+		writeDroneStats(droneRecords); // TODO: delete
+//		recordFlightPath(droneRecords);
+//		recordSensorReadings(droneRecords);
 
-		recordFlightPath(droneRecords);
-		recordSensorReadings(droneRecords);
-
+	}
+	
+//	TODO delete this
+	public static void writeDroneStats(DroneRecords droneRecords) {
+		
+		var moveCount = String.valueOf(droneRecords.getMoveNumber());
+		
+		try {
+		    Files.write(Paths.get("drone stats.txt"), 
+		    		moveCount.getBytes(), StandardOpenOption.APPEND);
+		}catch (IOException e) {
+		    //exception handling left as an exercise for the reader
+		}
+		
 	}
 
 	/**
@@ -99,6 +115,6 @@ public class FileHandler {
 
 		writeToFile(file, contents);
 
-	}
+	} 
 
 }
