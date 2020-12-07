@@ -116,8 +116,8 @@ public class Drone {
 			}
 		}
 		
-    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.getFeatures());
-    	System.out.println("traversal: " + fc.toJson());
+//    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.getFeatures());
+//    	System.out.println("traversal: " + fc.toJson());
 		
 	}
 

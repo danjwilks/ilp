@@ -86,7 +86,7 @@ public class App {
 	private static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
 		String noFlyZoneJsonString = WebClient.getNoFlyZonesJsonString();
 		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
-		System.out.println("no fly zones: " + FeatureCollection.fromJson(noFlyZoneJsonString).toJson());
+//		System.out.println("no fly zones: " + FeatureCollection.fromJson(noFlyZoneJsonString).toJson());
 		return noFlyZoneCollection;
 	}
 	

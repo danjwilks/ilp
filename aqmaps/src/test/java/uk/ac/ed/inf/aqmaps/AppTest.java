@@ -55,6 +55,7 @@ public class AppTest {
 			String[] args = new String[] 
 					{day, month, year, startLatitude, startLongitude, randomSeed, portNumber};
 			App.main(args);
+			System.out.println(date);
 		}
 		
 		
