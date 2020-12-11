@@ -1,15 +1,10 @@
 package uk.ac.ed.inf.aqmaps;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
-
 public class AppTest {
-	
 	
 	private static List<List<String>> generateValidDates() {
 		
@@ -34,28 +29,6 @@ public class AppTest {
 		}
 		
 		return dates;
-	}
-
-	@Test
-	public void testAppForRunFailures() {
-		
-		var dates = generateValidDates();
-		var startLatitude = String.valueOf(55.944425);
-		var startLongitude = String.valueOf(-3.188396);
-		var randomSeed = "5678";
-		var portNumber = "80";
-		
-		for (var date : dates) {
-			
-			var day = date.get(0);
-			var month = date.get(1);
-			var year = date.get(2);
-			
-			String[] args = new String[] 
-					{day, month, year, startLatitude, startLongitude, randomSeed, portNumber};
-			App.main(args);
-		}
-		
 	}
 
 }

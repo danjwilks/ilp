@@ -9,6 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfJoins;
@@ -620,6 +623,14 @@ public class ChristofidesRoute implements Route {
 				}
 			}
 			
+			var fs = new ArrayList<Feature>();
+			
+			for (var e : validDroneLocationsGraph.edgeSet()) {
+				var line = LineString.fromLngLats(Arrays.asList(e.getVertex1().getPoint(), e.getVertex2().getPoint()));
+				fs.add(Feature.fromGeometry(line));
+			}
+			System.out.println(FeatureCollection.fromFeatures(fs).toJson());
+			
 			return validDroneLocationsGraph;
 		}
 		
@@ -683,6 +694,8 @@ public class ChristofidesRoute implements Route {
 						break;
 					}
 				}
+				// is unable to visit this sensor.
+				unvisitedSensors.add(sensor);
 			}
 			
 			// drone location must start and end at a specified location
