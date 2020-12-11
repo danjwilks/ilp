@@ -1,6 +1,5 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 
