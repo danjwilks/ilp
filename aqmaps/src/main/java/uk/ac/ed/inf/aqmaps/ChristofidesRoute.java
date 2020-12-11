@@ -23,7 +23,6 @@ import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
  * @author s1851664
  * 
  * Route calculated using Christofides algorithm
- *
  */
 public class ChristofidesRoute implements Route {
 	
@@ -43,7 +42,7 @@ public class ChristofidesRoute implements Route {
 	/**
 	 * Route, only called by its static builder class.
 	 * 
-	 * @param builder object containing the information
+	 * @param builder - object containing the information
 	 *        required to build the route.
 	 */
 	private ChristofidesRoute(RouteBuilder builder) {
@@ -183,7 +182,7 @@ public class ChristofidesRoute implements Route {
 		/**
 		 * Sets the no fly zones of the route.
 		 * 
-		 * @param  noFlyZoneCollection no fly zones of the 
+		 * @param  noFlyZoneCollection - no fly zones of the 
 		 *         drone.
 		 * @return itself, following the builder pattern
 		 */
@@ -191,6 +190,7 @@ public class ChristofidesRoute implements Route {
 			this.noFlyZoneCollection = noFlyZoneCollection;
 			return this;
 		}
+		
 		/**
 		 * Sets the available sensors to visit on the
 		 * route.
@@ -202,6 +202,7 @@ public class ChristofidesRoute implements Route {
 			this.allAvailableSensors = allAvailableSensorsCollection;
 			return this;
 		}
+		
 		/**
 		 * Sets the start and end location of the route.
 		 * 
@@ -214,7 +215,7 @@ public class ChristofidesRoute implements Route {
 		}
 		
 		/**
-		 * sets the valid fly zone of the route.
+		 * Sets the valid fly zone of the route.
 		 */
 		private void setFlyZone() {
 			
@@ -339,7 +340,7 @@ public class ChristofidesRoute implements Route {
 		 * between the drone locations within the triangle 
 		 * grid passed as the parameter. 
 		 * 
-		 * @param  triangleGridDroneLocations the 2D grid of 
+		 * @param  triangleGridDroneLocations - the 2D grid of 
 		 * 		   valid drone locations.
 		 * @return the paths of the triangles edges of the 
 		 *         triangle grid.
@@ -436,7 +437,7 @@ public class ChristofidesRoute implements Route {
 		 * Determines if the given drone location is over 
 		 * a no fly zone.
 		 * 
-		 * @param  droneLocation to check
+		 * @param  droneLocation - location to check
 		 * @return true if drone location is over a no 
 		 *         fly zone.
 		 */
@@ -456,10 +457,10 @@ public class ChristofidesRoute implements Route {
 		/**
 		 * Determines if two line segments intersect.
 		 * 
-		 * @param line1Start vertex of line1 segment.
-		 * @param line1End   other vertex of line1 segment.
-		 * @param line2Start vertex of line2 segment.
-		 * @param line2End   other vertex of line2 segment.
+		 * @param line1Start - vertex of line1 segment.
+		 * @param line1End - other vertex of line1 segment.
+		 * @param line2Start - vertex of line2 segment.
+		 * @param line2End - other vertex of line2 segment.
 		 * @return true if lines segments intersect.
 		 */
 		private boolean linesIntersect(Point line1Start, Point line1End, Point line2Start, Point line2End) {
@@ -592,7 +593,7 @@ public class ChristofidesRoute implements Route {
 		/**
 		 * Builds a valid drone location graph.
 		 * 
-		 * @param  triangleGraph containing all possible
+		 * @param  triangleGraph - graph containing all possible
 		 * 		   drone locations within.
 		 * @return a graph containing all the valid paths
 		 *         and locations of the triangle graph.
@@ -625,10 +626,10 @@ public class ChristofidesRoute implements Route {
 		/**
 		 * Calculates the distance between two points
 		 * 
-		 * @param lon1 longitude of point 1.
-		 * @param lat1 latitude of point 1.
-		 * @param lon2 longitude of point 2.
-		 * @param lat2 latitude of point 2.
+		 * @param lon1 - longitude of point 1.
+		 * @param lat1 - latitude of point 1.
+		 * @param lon2 - longitude of point 2.
+		 * @param lat2 - latitude of point 2.
 		 * @return the distance between the two points.
 		 */
 		private double calcDist(double lon1, double lat1, double lon2, double lat2) {

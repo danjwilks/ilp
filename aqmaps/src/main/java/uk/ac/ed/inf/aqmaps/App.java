@@ -85,8 +85,6 @@ public class App {
 	 * @param args 	day, week, month, start longitude, start 
 	 * 				latitude, start longitude, random seed,
 	 * 				port number. 
-	 * @throws IOException
-	 * @throws InterruptedException
 	 */
 	public static void main( String[] args ) {
 		try {
