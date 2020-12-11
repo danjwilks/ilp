@@ -37,11 +37,11 @@ public class AppTest {
 	}
 
 	@Test
-	public void testAppFailures() {
+	public void testAppForRunFailures() {
 		
 		var dates = generateValidDates();
-		var startLatitude = String.valueOf(55.9444);
-		var startLongitude = String.valueOf(-3.1878);
+		var startLatitude = String.valueOf(55.944425);
+		var startLongitude = String.valueOf(-3.188396);
 		var randomSeed = "5678";
 		var portNumber = "80";
 		
@@ -51,11 +51,9 @@ public class AppTest {
 			var month = date.get(1);
 			var year = date.get(2);
 			
-			
 			String[] args = new String[] 
 					{day, month, year, startLatitude, startLongitude, randomSeed, portNumber};
 			App.main(args);
-			System.out.println(date);
 		}
 		
 		

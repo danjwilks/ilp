@@ -41,10 +41,8 @@ public class SensorPath {
 	 * @param paths     drone paths from vertex1 to vertex2.
 	 * @param vertex1   start drone location of locations 
 	 * 					list.
-	 * @param vertex2   end drone location of locations 
-	 * 					list.
 	 */
-	public SensorPath(List<DroneLocation> locations, List<DronePath> paths, DroneLocation vertex1, DroneLocation vertex2) {
+	public SensorPath(List<DroneLocation> locations, List<DronePath> paths, DroneLocation vertex1) {
 		this.vertex1ToVertex2 = paths;
 		this.vertex2ToVertex1 = reverse(paths);
 		this.weight = paths.size();

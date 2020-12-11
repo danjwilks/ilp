@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 
-import com.mapbox.geojson.FeatureCollection;
-
 /**
  * @author S1851664
  *
@@ -20,9 +18,9 @@ public class App {
 	/**
 	 * Validates the input program arguments.
 	 * 
-	 * @param args 	day, week, month, start longitude, start 
+	 * @param args 	{day, week, month, start longitude, start 
 	 * 				latitude, start longitude, random seed,
-	 * 				port number.  
+	 * 				port number}.  
 	 */
 	private static void validateArgs(String[] args) {
 		
@@ -77,56 +75,6 @@ public class App {
 	}
 	
 	/**
-	 * Retrieves from the web client the no fly zones
-	 * 
-	 * @return a collection of no fly zones
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private static NoFlyZoneCollection getNoFlyZoneCollection() throws IOException, InterruptedException {
-		String noFlyZoneJsonString = WebClient.getNoFlyZonesJsonString();
-		var noFlyZoneCollection = NoFlyZoneCollection.fromJsonString(noFlyZoneJsonString);
-//		System.out.println("no fly zones: " + FeatureCollection.fromJson(noFlyZoneJsonString).toJson());
-		return noFlyZoneCollection;
-	}
-	
-	/**
-	 * Retrieves from web client the sensors to visit
-	 * on the given date. 
-	 * 
-	 * @param  day
-	 * @param  month
-	 * @param  year
-	 * @return a collection of sensors to visit
-	 */
-	private static SensorCollection getSensorCollection(String day, String month, String year) {
-		var sensorJsonString = WebClient.getSensorsJsonString(day, month, year);
-    	var sensorCollection = SensorCollection.fromJsonString(sensorJsonString);
-    	for (var sensor : sensorCollection.getSensors()) {
-    		What3Words what3Words = getThreeWordLocation(sensor);
-    		sensor.setLongitude(what3Words.getCoordinates().getLongitude());
-    		sensor.setLatitude(what3Words.getCoordinates().getLatitude());
-    	}
-    	return sensorCollection;
-	}
-	
-	/**
-	 * Retrieves from the web client the what3words 
-	 * location for the given sensor.
-	 * 
-	 * @param  sensor
-	 * @return the what3Words corresponding to the given
-	 * 		   sensor
-	 */
-	private static What3Words getThreeWordLocation(Sensor sensor) {
-		String words = sensor.getLocation().replaceAll("\\.", "/");
-		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
-		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
-		return what3Words;
-		
-	}
-
-	/**
 	 * How the whole program is called.
 	 * 	
 	 * Parses input, gets the best route to traverse and 
@@ -141,7 +89,6 @@ public class App {
 	 * @throws InterruptedException
 	 */
 	public static void main( String[] args ) {
-//    	TODO system.exit(1); 
 		try {
 			validateArgs(args);
 		} catch (Exception e) {
@@ -163,16 +110,17 @@ public class App {
     	SensorCollection sensors = null;
     	Route route = null;
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
+    	var webClient = new WebClient(portNumber); 
     	
     	try {
-    		noFlyZones = getNoFlyZoneCollection();
+    		noFlyZones = webClient.getNoFlyZoneCollection();
     	} catch (Exception e) {
     		System.out.println("Could not get no fly zones.");
     		e.printStackTrace();
 			System.exit(1);
     	}
     	try {
-    		sensors = getSensorCollection(day, month, year);
+    		sensors = webClient.getSensorCollection(day, month, year);
     	} catch (Exception e) {
     		System.out.println("Could not get sensor to visit.");
     		e.printStackTrace();
@@ -191,7 +139,7 @@ public class App {
 			System.exit(1);
     	}
     	
-    	var drone = new Drone(startLocation, date);
+    	var drone = new Drone(date);
     	drone.traverse(route);
     	
     	try { 

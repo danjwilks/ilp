@@ -19,9 +19,9 @@ public class NoFlyZoneCollection {
 	private List<Polygon> noFlyZones;
 	
 	/**
-	 * Called only by a static function.
+	 * Called only by the static from json function.
 	 * 
-	 * @param noFlyZones zones that drone can
+	 * @param noFlyZones - zones that drone can
 	 *        not fly into.
 	 */
 	private NoFlyZoneCollection (List<Polygon> noFlyZones) {

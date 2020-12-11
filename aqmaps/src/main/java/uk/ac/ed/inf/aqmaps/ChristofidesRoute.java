@@ -9,9 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfJoins;
@@ -106,7 +103,7 @@ public class ChristofidesRoute implements Route {
 		 * The maximum number of moves the drone can 
 		 * traverse.
 		 */
-		private static final int MAX_NUMBER_OF_MOVES = 1000;
+		private static final int MAX_NUMBER_OF_MOVES = 150;
 		
 		/**
 		 * The maximum distance the drone can be to a
@@ -331,16 +328,6 @@ public class ChristofidesRoute implements Route {
 				}
 				triangleGrid.add(droneLocationsRow);
 			}
-//			TODO: delete this
-			var fs = new ArrayList<Feature>();
-			for (var a : triangleGrid) {
-				for (var b : a) {
-					
-					fs.add(Feature.fromGeometry(b.getPoint()));
-					
-				}
-			}
-//			System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fs).toJson());
 			return triangleGrid;
 		}
 		
@@ -410,27 +397,6 @@ public class ChristofidesRoute implements Route {
 				
 			}
 			
-//			TODO: remove
-			var fToPrint = new ArrayList<Feature>();
-			for (var path : allPaths) {
-				
-				var dist = Math.sqrt(
-						Math.pow(path.getVertex1().getLongitude() 
-								- path.getVertex2().getLongitude(), 2)
-						+ Math.pow(path.getVertex1().getLatitude()
-								- path.getVertex2().getLatitude(), 2)
-						);
-				if (dist < 0.00029 || dist > 0.00031) {
-//						System.out.println("error, triangle dist is wrong");
-//						break;
-				}
-				
-				var line = LineString.fromLngLats(Arrays.asList(path.getVertex1().getPoint(),
-						path.getVertex2().getPoint()));
-				fToPrint.add(Feature.fromGeometry(line));
-				
-			}
-//				System.out.println("triangle grid: " + FeatureCollection.fromFeatures(fToPrint).toJson());
 			return allPaths;
 			
 		}
@@ -727,7 +693,8 @@ public class ChristofidesRoute implements Route {
 		
 		/**
 		 * Builds a complete graph of drone locations and
-		 * paths between sensors.
+		 * paths between sensors such that each path is the
+		 * shortest it could be.
 		 * 
 		 * @param  triangleGraph
 		 * @param  sortedDroneLocationsToVisit
@@ -759,7 +726,7 @@ public class ChristofidesRoute implements Route {
 					completeSensorGraph.addVertex(sourceDroneLocation);
 					completeSensorGraph.addVertex(sinkDroneLocation);
 					
-					var sensorPath = new SensorPath(vertices, edges, sourceDroneLocation, sinkDroneLocation);
+					var sensorPath = new SensorPath(vertices, edges, sourceDroneLocation);
 					completeSensorGraph.addEdge(sourceDroneLocation, sinkDroneLocation, sensorPath);
 					completeSensorGraph.setEdgeWeight(sensorPath, sensorPath.getWeight());
 				}
@@ -781,13 +748,13 @@ public class ChristofidesRoute implements Route {
 		 * @return an list of sensor indexes, sorted in the
 		 *         order that the drone should visit. 
 		 */
-		private List<Integer> buildCorrectOrderSensorIndexes(GraphPath<DroneLocation, SensorPath> sensorRouteGraph) {
-			var startEndIndex = findStartEndIndex(sensorRouteGraph);
+		private List<Integer> buildCorrectOrderSensorIndexes(GraphPath<DroneLocation, SensorPath> sensorRoutePath) {
+			var startEndIndex = findStartEndIndex(sensorRoutePath);
 			
 			var indexes = new ArrayList<Integer>();
 			
 			// we want to set the first value to index of the start location
-			for (int i = startEndIndex; i < sensorRouteGraph.getLength(); i++) {
+			for (int i = startEndIndex; i < sensorRoutePath.getLength(); i++) {
 				indexes.add(i);
 			}
 			// add the rest of the indexes.
@@ -807,9 +774,9 @@ public class ChristofidesRoute implements Route {
 		 *         graph path that corresponds to the start 
 		 *         location.
 		 */
-		private int findStartEndIndex(GraphPath<DroneLocation, SensorPath> sensorRouteGraph) {
+		private int findStartEndIndex(GraphPath<DroneLocation, SensorPath> sensorRoutePath) {
 			
-			var sensorDroneLocations = sensorRouteGraph.getVertexList();
+			var sensorDroneLocations = sensorRoutePath.getVertexList();
 			
 			for (int i = 0; i < sensorDroneLocations.size(); i++) {
 				if (sensorDroneLocations.get(i).equals(startEndLocation)) {
@@ -864,24 +831,6 @@ public class ChristofidesRoute implements Route {
 			
 			return orderedDroneLocationTour;
 			
-		}
-		
-		/** TODO delete
-		 * @param sensorRoute
-		 */
-		private void printTour(GraphPath<DroneLocation, SensorPath> sensorRoute) {
-			
-			var fs = new ArrayList<Feature>(); 
-			for (var n : sensorRoute.getVertexList()) {
-				fs.add(Feature.fromGeometry(n.getPoint()));
-			}
-			for (var e : sensorRoute.getEdgeList()) {
-				for (var ps : e.getVertex1ToVertex2()) {
-					var line = LineString.fromLngLats(Arrays.asList(ps.getVertex1().getPoint(), ps.getVertex2().getPoint()));
-					fs.add(Feature.fromGeometry(line));
-				}
-			}
-//			System.out.println("tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
 		}
 		
 		/**
@@ -945,23 +894,6 @@ public class ChristofidesRoute implements Route {
 		}
 		
 		/**
-//		 * TODO delete
-		 * 
-		 * @param graph
-		 */
-		private void printGraph(Graph<DroneLocation, DronePath> graph) {
-			var fs = new ArrayList<Feature>(); 
-			for (var n : graph.vertexSet()) {
-				fs.add(Feature.fromGeometry(n.getPoint()));
-			}
-			for (var ps : graph.edgeSet()) {
-				var line = LineString.fromLngLats(Arrays.asList(ps.getVertex1().getPoint(), ps.getVertex2().getPoint()));
-				fs.add(Feature.fromGeometry(line));
-			}
-//			System.out.println("graph tour geojson: " + FeatureCollection.fromFeatures(fs).toJson());
-		}
-		
-		/**
 		 * Builds the route using Christofides algorithm.
 		 * 
 		 * First builds a equilateral triangle graph and 
@@ -986,13 +918,15 @@ public class ChristofidesRoute implements Route {
 			// sorted in ascending order of distance to start location
 			var sortedDroneLocationsToVisit = sortDroneLocationsToVisit(droneLocationsToVisit);
 			
+			// algorithm to determine minimum tour of drone locations.
+			var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
+			
 			// the tour we generate might be too long so we must keep removing vertices
 			// until tour size is within limit.
 			do {  
 				var completeSensorGraph = buildShortestPathCompleteSensorGraph(validDroneLocationsGraph, 
 						sortedDroneLocationsToVisit);
 				
-				var christofides = new ChristofidesThreeHalvesApproxMetricTSP<DroneLocation, SensorPath>();
 				// tour of the sensors and start location given with a compressed representation of 
 				// sensor paths.
 				var sensorTour = christofides.getTour(completeSensorGraph);
@@ -1000,7 +934,6 @@ public class ChristofidesRoute implements Route {
 				
 				if (hasLegalNumberOfMoves(orderedDroneLocationTour)) {
 					this.droneLocationsToVisit = orderedDroneLocationTour;
-//					System.out.println("resulting number of vertices: " + droneLocationsToVisit.size());
 					break;
 				} 
 				// over the limit so must remove a droneLocation to visit.

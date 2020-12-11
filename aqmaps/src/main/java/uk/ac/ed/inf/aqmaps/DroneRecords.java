@@ -34,7 +34,7 @@ public class DroneRecords {
 	/**
 	 * The number of moves completed.
 	 */
-	private int moveNumber = 0;
+	private int moveNumber;
 	
 	/**
 	 * @param date of drone recording.
@@ -43,6 +43,7 @@ public class DroneRecords {
 		this.date = date;
 		this.features = new ArrayList<>();
 		this.flightPathTextFile = new ArrayList<>();
+		this.moveNumber = 0;
 	}
 	
 	/**
@@ -103,8 +104,8 @@ public class DroneRecords {
 		var pathFeature = buildPathFeature(source, sink);
 		features.add(pathFeature);
 		
-		var pathTextFileLine = buildTextFileLine(source, sink);
 		moveNumber++;
+		var pathTextFileLine = buildTextFileLine(source, sink);
 		flightPathTextFile.add(pathTextFileLine);
 		
 	}

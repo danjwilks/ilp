@@ -3,6 +3,7 @@ package uk.ac.ed.inf.aqmaps;
 /**
  * @author university
  *
+ * Class used to represent a sensor.
  */
 public class Sensor {
 	

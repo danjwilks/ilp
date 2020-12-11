@@ -20,7 +20,7 @@ public class SensorCollection {
 	private List<Sensor> sensors;
 	
 	/**
-	 * Only called by static method.
+	 * Only called by static method fromJsonString.
 	 * 
 	 * @param sensors to group together.
 	 */

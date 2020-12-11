@@ -2,15 +2,10 @@ package uk.ac.ed.inf.aqmaps;
 
 import java.util.List;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
-
 /**
  * @author S1851664
  * 
  * Drone that is able to collect sensor readings.
- *
  */
 public class Drone {
 	
@@ -21,18 +16,12 @@ public class Drone {
 	private DroneRecords droneRecords;
 	
 	/**
-	 * The start and the end location of the drone.
-	 */
-	private DroneLocation startEndLocation;
-	
-	/**
 	 * @param startEndLocation
 	 * @param date when the drone is called to traverse.
 	 */
-	public Drone(DroneLocation startEndLocation, String date) {
+	public Drone(String date) {
 		this.sensorReader = new SensorReader();
 		this.droneRecords = new DroneRecords(date);
-		this.startEndLocation = startEndLocation;
 	}
 	
 	/**
@@ -97,13 +86,6 @@ public class Drone {
 			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
 			var nextDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex + 1);
 			
-			if (currentDroneLocation.equals(startEndLocation)) { // TODO: delete later
-				var point = Point.fromLngLat(currentDroneLocation.getLongitude(), 
-						currentDroneLocation.getLatitude()); 
-				var feature = Feature.fromGeometry(point);
-				droneRecords.getFeatures().add(feature);
-			}
-			
 			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
 			currentDroneLocation = nextDroneLocation;
 			if (currentDroneLocation.getIsNearSensor()) {
@@ -115,9 +97,6 @@ public class Drone {
 				}
 			}
 		}
-		
-//    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.getFeatures());
-//    	System.out.println("traversal: " + fc.toJson());
 		
 	}
 
