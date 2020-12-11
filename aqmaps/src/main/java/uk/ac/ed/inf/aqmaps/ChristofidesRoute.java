@@ -243,16 +243,19 @@ public class ChristofidesRoute implements Route {
 			
 			var upperLeftLatStart = startEndLocation.getLatitude();
 			int numberOfRowsToTop = 0;
+			var triangleHeight = getTriangleHeight();
 			while (upperLeftLatStart < ULLAT) {
-				upperLeftLatStart = upperLeftLatStart += MOVE_DISTANCE;
+				upperLeftLatStart = upperLeftLatStart += triangleHeight;
 				numberOfRowsToTop++;
 			}
 			
 			boolean isShiftedRow = false;
 			// the first row of drone locations is shifted
-			// only if there is an even number of rows
-			// from the original start location.
-			if (numberOfRowsToTop % 2 == 0) {
+			// only if there is an odd number of rows
+			// from the original start location. This is
+			// because we don't want to shift the row
+			// that contains the start location.
+			if (numberOfRowsToTop % 2 == 1) {
 				isShiftedRow = true;
 			}
 			return isShiftedRow;
@@ -359,7 +362,7 @@ public class ChristofidesRoute implements Route {
 								));
 					}
 					
-					if (column > 1) {
+					if (column > 0) {
 						// add path from current point to the left point.
 						allPaths.add(new DronePath(
 								triangleGridDroneLocations.get(row).get(column),

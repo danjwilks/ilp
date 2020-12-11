@@ -56,7 +56,6 @@ public class AppTest {
 			App.main(args);
 		}
 		
-		
 	}
 
 }
