@@ -27,3 +27,9 @@ I will now talk about how my application builds a route for the drone to travers
 After completing the above steps, the RouteBuilder class constructs the Route object ChristofidesRoute. This Route object is passed to the drone and the drone traverses it as stated earlier.
 
 At step (7), I had the opportunity to use different algorithms to find the minimum tour. I tried using an algorithm that finds the tour using a completely random approach and is not optimised at all. I also used a greedy algorithm. I have run all three algorithms within step 7 on every date available in the api for a specific start location. I have plotted the performance of each in figure **Figure 7**. Looking at the figure it is clear to see that using Christofides and greedy are much better than using a completely random approach. Looking at **Figure 8** it is clear to see that Christofides algorithm performs better on average so this is why I chose to use this algorithm to find the minimum tour.
+
+# Figures
+
+![Alt text](https://github.com/danjwilks/ilp/blob/1f3d53194af8be6fb8bd1778b73fb2f557d20c33/Screenshot%202021-03-05%20at%2020.34.38.png "Title")
+
+![Alt text](https://github.com/danjwilks/ilp/blob/1f3d53194af8be6fb8bd1778b73fb2f557d20c33/Screenshot%202021-03-05%20at%2020.35.03.png "Title")
