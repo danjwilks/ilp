@@ -1,19 +1,44 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.util.Arrays;
-
-import com.mapbox.geojson.LineString;
-
+/**
+ * @author S1851664
+ * 
+ * Class to represent a flight path between two
+ * drone locations. This path is undirected.
+ */
 public class DronePath {
 	
-	DroneLocation vertex1;
-	DroneLocation vertex2;
-	LineString lineString;
+	/**
+	 * First vertex of the flight path.
+	 */
+	private DroneLocation vertex1;
 	
+	/**
+	 * Second vertex of the flight path. 
+	 */
+	private DroneLocation vertex2;
+	
+	/**
+	 * @param vertex1
+	 * @param vertex2
+	 */
 	public DronePath(DroneLocation vertex1, DroneLocation vertex2) {
 		this.vertex1 = vertex1;
 		this.vertex2 = vertex2;
-		this.lineString = LineString.fromLngLats(Arrays.asList(vertex1.point, vertex2.point));
+	}
+	
+	/**
+	 * Returns the vertex connected to the given vertex.
+	 * 
+	 * @param from is vertex we want to get the adjacent 
+	 *        vertex from.
+	 * @return the connected vertex to 'from'.
+	 */
+	public DroneLocation getConnectingDroneLocation(DroneLocation from) {
+		if (vertex1.equals(from)) {
+			return vertex2;
+		}
+		return vertex1;
 	}
 	
 	@Override
@@ -26,6 +51,10 @@ public class DronePath {
 		return vertex1.hashCode() + vertex2.hashCode();
 	}
 	
+	/**
+	 * Two drone paths are equal if the vertices 
+	 * are equal. The path is undirected.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -41,6 +70,20 @@ public class DronePath {
 		DronePath edge = (DronePath) obj;
 		return vertex1.equals(edge.vertex1) && vertex2.equals(edge.vertex2)
 				|| vertex2.equals(edge.vertex1) && vertex1.equals(edge.vertex2);
+	}
+
+	/**
+	 * @return vertex1
+	 */
+	public DroneLocation getVertex1() {
+		return this.vertex1;
+	}
+	
+	/**
+	 * @return vertex2
+	 */
+	public DroneLocation getVertex2() {
+		return this.vertex2;
 	}
 
 }

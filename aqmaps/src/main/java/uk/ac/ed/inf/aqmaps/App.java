@@ -3,17 +3,25 @@ package uk.ac.ed.inf.aqmaps;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.lang.reflect.Type;
 
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Polygon;
-
+/**
+ * @author S1851664
+ *
+ * Runs the main program. 
+ * 
+ * Parses input, gets the best route to traverse and 
+ * tells the drone to traverse said route then 
+ * records the records from the drone traversal.
+ */
 public class App {
 	
+	/**
+	 * Validates the input program arguments.
+	 * 
+	 * @param args 	{day, week, month, start longitude, start 
+	 * 				latitude, start longitude, random seed,
+	 * 				port number}.  
+	 */
 	private static void validateArgs(String[] args) {
 		
 		if (args.length != 7) {
@@ -23,22 +31,20 @@ public class App {
 		int day = -1;
 		int month = -1;
 		int year = -1;
-		int randomSeed = -1;
-		int portNumber = -1;
 		
 		try{
 			day = Integer.parseInt(args[0]);
 			month = Integer.parseInt(args[1]);
 			year = Integer.parseInt(args[2]);
-			randomSeed = Integer.parseInt(args[5]);
-			portNumber = Integer.parseInt(args[6]);
+			Integer.parseInt(args[5]); // randomSeed
+			Integer.parseInt(args[6]); // portNumber
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("Day, month, year, random seed and port number should be integer values.");
 		}
 		
 		try {
-			Double.parseDouble(args[3]);
-			Double.parseDouble(args[4]);
+			Double.parseDouble(args[3]); // start longitude
+			Double.parseDouble(args[4]); // start latitude
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("X or Y starting coordinate should be doubles.");
 		}
@@ -49,7 +55,15 @@ public class App {
 		
 	}
 	
-	public static boolean dateIsValid(int day, int month, int year) {
+	/**
+	 * Validates if the given date is a valid date.
+	 * 
+	 * @param  day
+	 * @param  month
+	 * @param  year
+	 * @return true if date is valid
+	 */
+	private static boolean dateIsValid(int day, int month, int year) {
 		
 	    boolean dateIsValid = true;
 	    try {
@@ -60,55 +74,26 @@ public class App {
 	    return dateIsValid;
 	}
 	
-	public static List<Polygon> getBuildings() throws IOException, InterruptedException {
-		
-		String buildingsJsonString = WebClient.getBuildingJsonString();
-		System.out.println("buildings: " + FeatureCollection.fromJson(buildingsJsonString).toJson());
-		var features = FeatureCollection.fromJson(buildingsJsonString).features();
-		var buildings = new ArrayList<Polygon>();
-		for (var feature : features) {
-			if (feature.geometry().getClass().equals(Polygon.class)) {
-				buildings.add((Polygon) feature.geometry());
-			}
+	/**
+	 * How the whole program is called.
+	 * 	
+	 * Parses input, gets the best route to traverse and 
+	 * tells the drone to traverse said route then 
+	 * records the records from the drone traversal.
+	 * 
+	 * 
+	 * @param args 	day, week, month, start longitude, start 
+	 * 				latitude, start longitude, random seed,
+	 * 				port number. 
+	 */
+	public static void main( String[] args ) {
+		try {
+			validateArgs(args);
+		} catch (Exception e) {
+			System.out.println("Arguments are not valid.");
+			e.printStackTrace();
+			System.exit(1);
 		}
-		return buildings;
-	}
-	
-	public static List<Sensor> getSensors(String day, String month, String year) {
-		String sensorsJSONString = WebClient.getSensorsJsonString(day, month, year);
-		List<Sensor> sensors = buildSensors(sensorsJSONString);
-		return sensors;
-	}
-	
-	public static What3Words getThreeWordLocation(Sensor sensor) {
-		String words = sensor.location.replaceAll("\\.", "/");
-		String what3WordsJsonString = WebClient.getWhat3WordsJsonString(words);
-		What3Words what3Words = What3Words.fromJsonString(what3WordsJsonString);
-		return what3Words;
-		
-	}
-	
-	public static List<Sensor> buildSensors(String sensorsJSONString) {
-		
-		if (sensorsJSONString.equals("")) {
-			return new ArrayList<>();
-		}
-		
-		Type listType = new TypeToken<ArrayList<Sensor>>() {}.getType();
-    	List<Sensor> sensors = new Gson().fromJson(sensorsJSONString, listType);
-    	
-    	for (var sensor : sensors) {
-    		What3Words what3Words = getThreeWordLocation(sensor);
-    		sensor.setLongitude(what3Words.coordinates.lng);
-    		sensor.setLatitude(what3Words.coordinates.lat);
-    	}
-    	
-    	return sensors;
-	}
-	
-    public static void main( String[] args ) throws IOException, InterruptedException {
-    	
-    	validateArgs(args);
     	
     	String day = args[0];
     	String month = args[1];
@@ -119,18 +104,49 @@ public class App {
     	int randomSeed = Integer.parseInt(args[5]);
     	int portNumber = Integer.parseInt(args[6]);
     	
-    	var buildings = getBuildings();
-    	var sensors = getSensors(day, month, year);
+    	NoFlyZoneCollection noFlyZones = null;
+    	SensorCollection sensors = null;
+    	Route route = null;
     	DroneLocation startLocation = new DroneLocation(startLongitude, startLatitude);
+    	var webClient = new WebClient(portNumber); 
     	
-    	var bestRoute = new RouteBuilder()
-    			.setBuildings(buildings)
-    			.setSensors(sensors)
-    			.setStartEndLocation(startLocation)
-    			.buildBestRoute();
+    	try {
+    		noFlyZones = webClient.getNoFlyZoneCollection();
+    	} catch (Exception e) {
+    		System.out.println("Could not get no fly zones.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
+    	try {
+    		sensors = webClient.getSensorCollection(day, month, year);
+    	} catch (Exception e) {
+    		System.out.println("Could not get sensor to visit.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
     	
-    	var drone = new Drone(startLocation, date);
-    	drone.collectPollutionData(bestRoute);
+    	try {
+	    	route = new ChristofidesRoute.RouteBuilder()
+	    			.setNoFlyZones(noFlyZones)
+	    			.setAvailableSensors(sensors)
+	    			.setStartEndLocation(startLocation)
+	    			.buildBestRoute();
+    	} catch (Exception e) {
+    		System.out.println("Could not build route for drone.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
+    	
+    	var drone = new Drone(date);
+    	drone.traverse(route);
+    	
+    	try { 
+    		FileHandler.writeToFile(drone.getDroneRecords());
+    	} catch (Exception e) {
+    		System.out.println("Could not write drone records to file.");
+    		e.printStackTrace();
+			System.exit(1);
+    	}
     	
     }
 }

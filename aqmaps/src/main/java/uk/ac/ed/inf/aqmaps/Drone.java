@@ -1,160 +1,123 @@
 package uk.ac.ed.inf.aqmaps;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.jgrapht.GraphPath;
-
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
-
+/**
+ * @author S1851664
+ * 
+ * Drone that is able to collect sensor readings.
+ */
 public class Drone {
-//	TODO plot sensors not visited
-	Set<Sensor> visitedSensors;
-	DroneLocation startEndLocation;
-	String outputFile;
-	int lineCount;
-	SensorReader sensorReader;
-	DroneRecords droneRecords;
 	
-	public Drone(DroneLocation startEndLocation, String date) {
-		this.visitedSensors = new HashSet<>();
-		this.startEndLocation = startEndLocation;
-		this.outputFile = "flightpath-" + date + ".txt";
-		this.lineCount = 1;
+	private SensorReader sensorReader;
+	/**
+	 * Stores sensor readings and path information.
+	 */
+	private DroneRecords droneRecords;
+	
+	/**
+	 * @param startEndLocation
+	 * @param date when the drone is called to traverse.
+	 */
+	public Drone(String date) {
 		this.sensorReader = new SensorReader();
-		this.droneRecords = new DroneRecords();
+		this.droneRecords = new DroneRecords(date);
 	}
 	
-	public void recordSensorDetails(Sensor sensor) {
-		
-		var sensorReading = sensorReader.read(sensor);
-		droneRecords.addSensorReading(sensorReading);
-		
+	/**
+	 * Stores sensor readings to the drone records.
+	 * 
+	 * @param sensor
+	 */
+	private void recordSensorDetails(Sensor sensor) {
+		var sensorInformation = sensorReader.read(sensor);
+		droneRecords.addSensorInformation(sensorInformation);
 	}
 	
-	public void recordDronePath(DroneLocation source, DroneLocation sink) {
-		
+	/**
+	 * Stores path information to the drone records.
+	 * 
+	 * @param source
+	 * @param sink
+	 */
+	private void recordDronePath(DroneLocation source, DroneLocation sink) {
 		droneRecords.addPath(source, sink);
-		
 	}
-	
-	public List<DronePath> reverseSensorPathEdges(List<DronePath> edges) {
-		
-		var reversed = new ArrayList<DronePath>();
-		for (int i = edges.size() - 1; i >= 0; i--) {
-			reversed.add(edges.get(i));
-		}
-		return reversed;
-		
-	}
-	
-	public boolean edgeIsInReverseOrder(DroneLocation startDroneLocation, DroneLocation currentSensorPathSource) {
-		
-		boolean isReversed = !startDroneLocation.equals(currentSensorPathSource);
-		
-		return isReversed;
-		
-	}
-	
-	public int calcDirectionDegree(DroneLocation source, DroneLocation sink) {
-		
-	    double angle = Math.toDegrees(Math.atan2(sink.lon - source.lon, sink.lat - source.lat));
 
-	    if(angle < 0){
-	        angle += 360;
-	    }
-	    
-	    return (int) Math.round(angle);
-		
+	/**
+	 * Moves the drone from the given source location
+	 * to the sink location and records the drone 
+	 * path.
+	 * 
+	 * @param source
+	 * @param sink
+	 */
+	private void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
+		recordDronePath(source, sink);
 	}
-	
-	public void writePathToFile(DroneLocation source, DroneLocation sink) {
+
+	/**
+	 * Makes drone traverse the given route and collect
+	 * sensor information as it passes sensors and 
+	 * record sensor information.
+	 * 
+	 * @param route the path for the drone to follow.
+	 */
+	public void traverse(Route route) {
 		
-		try {
-			var output = new BufferedWriter(new FileWriter(outputFile, true));
-			
-			String nearBySensorLocation = "null";
-			if (sink.isNearSensor) { 
-				nearBySensorLocation = sink.nearbySensor.location;
-			}
-			
-			var directionDegree = calcDirectionDegree(source, sink);
-			
-			output.append(lineCount                       + ",");
-			output.append(String.valueOf(source.lon)      + ",");
-			output.append(String.valueOf(source.lat)      + ",");
-			output.append(String.valueOf(directionDegree) + ",");
-			output.append(String.valueOf(sink.lon)        + ",");
-			output.append(String.valueOf(sink.lat)        + ",");  
-			output.append(nearBySensorLocation);
-			output.newLine();
-			output.close();
-			
-			lineCount++;
-			
-		} catch (IOException e) {
+		try { 
+			recordUnvisitedSensors(route.getUnvisitedSensors());
+		} catch (Exception e) {
+			System.out.println("Could not record unvisited sensor locations.");
 			e.printStackTrace();
 		}
 		
-	}
-	
-	private void addPathInfoToLogFile(DroneLocation source, DroneLocation sink) {
+		List<DroneLocation> droneLocationsToVisit = null;
 		
-		writePathToFile(source, sink);
-	}
-	
-	private void recordMovementDetails(DroneLocation source, DroneLocation sink) {
-		
-//		boolean currentNodeIsSinkNode = currentDronePathSink.equals(trueSensorPathSink);
-//		boolean checkForSensor = currentNodeIsSinkNode & currentDronePathSink.isNearSensor;
-		
-		
-		recordDronePath(source, sink);
-//		TODO: merge below with above.
-//		we need to add sensor location.
-		addPathInfoToLogFile(source, sink);
-		
-		
-	}
-
-	public void moveToNextDroneLocation(DroneLocation source, DroneLocation sink) {
-		
-		recordMovementDetails(source, sink);
-		
-	}
-
-	public void collectPollutionData(List<DroneLocation> bestRoute) {
-		
-
-		
-		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < bestRoute.size() - 1; droneLocationToVisitIndex++) {
-			var currentDroneLocation = bestRoute.get(droneLocationToVisitIndex);
-			var nextDroneLocation = bestRoute.get(droneLocationToVisitIndex + 1);
-			
-			if (currentDroneLocation.isStart) { // delete later
-				var point = Point.fromLngLat(currentDroneLocation.lon, currentDroneLocation.lat); 
-				var feature = Feature.fromGeometry(point);
-				droneRecords.features.add(feature);
-			}
-			
-			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
-			if (currentDroneLocation.isNearSensor) {
-				recordSensorDetails(currentDroneLocation.nearbySensor);
-			}
-			
+		try {
+			droneLocationsToVisit = route.getDroneLocationsToVisit();
+		} catch (Exception e) {
+			System.out.println("Could not get drone locations from route.");
+			e.printStackTrace();
+			return;
 		}
 		
+		for (int droneLocationToVisitIndex = 0; droneLocationToVisitIndex < droneLocationsToVisit.size() - 1; droneLocationToVisitIndex++) {
+			var currentDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex);
+			var nextDroneLocation = droneLocationsToVisit.get(droneLocationToVisitIndex + 1);
+			
+			moveToNextDroneLocation(currentDroneLocation, nextDroneLocation);
+			currentDroneLocation = nextDroneLocation;
+			if (currentDroneLocation.getIsNearSensor()) {
+				try {
+					recordSensorDetails(currentDroneLocation.getNearbySensor());
+				} catch (Exception e) {
+					System.out.println("Could not record sensor information for current sensor.");
+					e.printStackTrace();
+				}
+			}
+		}
 		
-    	FeatureCollection fc = FeatureCollection.fromFeatures(droneRecords.features);
-    	System.out.println("traversal: " + fc.toJson());
+	}
+
+	/**
+	 * Records the unvisited sensors to drone records.
+	 * 
+	 * @param unvisitedSensors
+	 */
+	private void recordUnvisitedSensors(SensorCollection unvisitedSensors) {
 		
+		for (var sensor : unvisitedSensors.getSensors()) {
+			droneRecords.addSensorInformation(sensorReader.buildUnvisitedInfo(sensor));
+		}
+		
+	}
+
+	/**
+	 * @return the drones records.
+	 */
+	public DroneRecords getDroneRecords() {
+		return droneRecords;
 	}
 
 }

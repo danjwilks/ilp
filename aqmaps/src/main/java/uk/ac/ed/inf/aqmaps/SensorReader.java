@@ -3,16 +3,60 @@ package uk.ac.ed.inf.aqmaps;
 import static uk.ac.ed.inf.aqmaps.Colours.*;
 import static uk.ac.ed.inf.aqmaps.MarkerSymbols.*;
 
+/**
+ * @author S1851664
+ *
+ * Class representing a sensor reader. It can
+ * read and interpret information from a sensor.
+ */
 public class SensorReader {
 	
-	public SensorReading read(Sensor sensor) {
+	/**
+	 * The maximum battery reading of a sensor.
+	 */
+	private static final double MAX_BATTERY = 100.0;
+	/**
+	 * 10% of the maximum battery reading.
+	 */
+	private static final double TEN_PERCENT_BATTERY = MAX_BATTERY / 10.0;
+	
+	/**
+	 * Builds information for a sensor that has not
+	 * been visited.
+	 * 
+	 * @param sensor that has not been visited.
+	 * @return the information for the unvisited 
+	 * 		   sensor.
+	 */
+	public SensorInformation buildUnvisitedInfo(Sensor sensor) {
+		
+		var location = readWhat3Words(sensor);
+		
+		SensorInformation reading = new SensorInformation.SensorInformationBuilder()
+				.setLongitude(sensor.getLongitude())
+				.setLatitude(sensor.getLatitude())
+				.setLocation(location)
+				.build();
+		
+		return reading;
+		
+	}
+	
+	/**
+	 * Reads sensor information from a given sensor.
+	 * 
+	 * @param sensor to read information from.
+	 * @return the sensor information read from
+	 *         the corresponding sensor.
+	 */
+	public SensorInformation read(Sensor sensor) {
 		
 		var location = readWhat3Words(sensor);
 		var rgbString = readFeatureRgbString(sensor);
 		var markerColor = readMarkerColor(sensor);
 		var markerSymbol = readMarkerSymbol(sensor);
 		
-		SensorReading reading = new SensorReading.SensorReadingBuilder()
+		SensorInformation reading = new SensorInformation.SensorInformationBuilder()
 				.setLongitude(sensor.getLongitude())
 				.setLatitude(sensor.getLatitude())
 				.setLocation(location)
@@ -25,27 +69,54 @@ public class SensorReader {
 		
 	}
 	
-	public String readWhat3Words(Sensor sensor) {
-		return sensor.location;
+	/**
+	 * Reads the what3Words from the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return what3words location read from sensor.
+	 */
+	private String readWhat3Words(Sensor sensor) {
+		return sensor.getLocation();
 	}
 	
-	public String readFeatureRgbString(Sensor sensor) {
+	/**
+	 * Reads and interprets a rgb value 
+	 * corresponding to the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return rgb string interpreted from the 
+	 *         sensor.
+	 */
+	private String readFeatureRgbString(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
-	public String readMarkerColor(Sensor sensor) {
+	/**
+	 * Reads and interprets the marker color
+	 * of the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return marker color interpreted from sensor.
+	 */
+	private String readMarkerColor(Sensor sensor) {
 		return determineHexString(sensor);
 	}
 	
-	public String readMarkerSymbol(Sensor sensor) {
+	/**
+	 * Reads and interprets the marker symbol
+	 * of the sensor.
+	 * 
+	 * @param sensor to read from.
+	 * @return the marker symbol.
+	 */
+	private String readMarkerSymbol(Sensor sensor) {
 		String markerSymbol = "";
-		double tenPercent = 10.0;
-		if (sensor.battery < tenPercent) {
+		if (sensor.getBattery() < TEN_PERCENT_BATTERY) {
 			return CROSS;
 		}
 		double polutionLevel;
 		try {
-			polutionLevel = Double.parseDouble(sensor.reading);
+			polutionLevel = Double.parseDouble(sensor.getReading());
 		} catch (NumberFormatException e) {
 			return CROSS;
 		} catch (NullPointerException e) {
@@ -60,14 +131,21 @@ public class SensorReader {
 		return markerSymbol;
 	}
 	
-	public String determineHexString(Sensor sensor) {
+	/**
+	 * determines the corresponding hex string
+	 * for a given sensor reading.
+	 * 
+	 * @param sensor to read from.
+	 * @return corresponding hex string.
+	 */
+	private String determineHexString(Sensor sensor) {
 		
 		String hexString = "";
 		double tenPercent = 10.0;
-		if (sensor.battery < tenPercent) {
+		if (sensor.getBattery() < tenPercent) {
 			return BLACK;
 		}
-		double polutionLevel = Double.parseDouble(sensor.reading);
+		double polutionLevel = Double.parseDouble(sensor.getReading());
 		
 		if (0 <= polutionLevel && polutionLevel < 32) {
 			hexString = GREEN;
@@ -88,6 +166,5 @@ public class SensorReader {
 		}
 		return hexString;
 	}
-	
 
 }

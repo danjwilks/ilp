@@ -2,7 +2,7 @@ package uk.ac.ed.inf.aqmaps;
 
 /**
  * The hex values of colours that are used in the 
- * heatmap. 
+ * geojson creation. 
  */
 
 public final class MarkerSymbols {
