@@ -1,6 +1,6 @@
 # Informatics Large Practical 
 
-2nd year course at the University of Edinburgh
+2nd year course at the University of Edinburgh. Achieved 88%. 
 
 # Drone Control Algorithm
 
